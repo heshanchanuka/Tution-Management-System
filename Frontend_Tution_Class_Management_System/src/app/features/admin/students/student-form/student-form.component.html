@@ -1,0 +1,45 @@
+<div class="container-fluid px-4 py-4" style="max-width: 560px;">
+  <h3 class="fw-bold mb-4">{{ isEditMode ? 'Edit Student' : 'Add Student' }}</h3>
+
+  <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+    <div class="mb-3">
+      <label class="form-label">Full Name</label>
+      <input type="text" formControlName="fullName" class="form-control"
+             [class.is-invalid]="f['fullName'].invalid && f['fullName'].touched" />
+      <div class="invalid-feedback" *ngIf="f['fullName'].invalid && f['fullName'].touched">
+        Full name is required.
+      </div>
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">Date of Birth</label>
+      <input type="date" formControlName="dateOfBirth" class="form-control" />
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">Grade Level</label>
+      <input type="text" formControlName="gradeLevel" class="form-control" placeholder="e.g. Grade 8"
+             [class.is-invalid]="f['gradeLevel'].invalid && f['gradeLevel'].touched" />
+      <div class="invalid-feedback" *ngIf="f['gradeLevel'].invalid && f['gradeLevel'].touched">
+        Grade level is required.
+      </div>
+    </div>
+
+    <div class="mb-4">
+      <label class="form-label">Parent</label>
+      <select formControlName="parentId" class="form-select"
+              [class.is-invalid]="f['parentId'].invalid && f['parentId'].touched">
+        <option [ngValue]="null" disabled>Select a parent…</option>
+        <option *ngFor="let parent of parents" [ngValue]="parent.id">{{ parent.fullName }} ({{ parent.username }})</option>
+      </select>
+      <div class="invalid-feedback" *ngIf="f['parentId'].invalid && f['parentId'].touched">
+        Parent is required.
+      </div>
+    </div>
+
+    <button type="submit" class="btn btn-primary" [disabled]="submitting">
+      {{ isEditMode ? 'Save Changes' : 'Create Student' }}
+    </button>
+    <a routerLink="/admin/students" class="btn btn-outline-secondary ms-2">Cancel</a>
+  </form>
+</div>

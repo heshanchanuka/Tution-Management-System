@@ -1,0 +1,35 @@
+<div class="container-fluid px-4 py-4">
+  <h3 class="fw-bold mb-3">My Classes</h3>
+
+  <div class="card border-0 shadow-sm">
+    <div class="table-responsive">
+      <table class="table table-hover mb-0 align-middle">
+        <thead class="table-light">
+          <tr>
+            <th>Subject</th>
+            <th>Grade</th>
+            <th>Schedule</th>
+            <th>Enrolled</th>
+            <th class="text-end">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let cls of classes">
+            <td>{{ cls.subject }}</td>
+            <td>{{ cls.gradeLevel }}</td>
+            <td>{{ cls.dayOfWeek | titlecase }} {{ cls.startTime.slice(0,5) }}–{{ cls.endTime.slice(0,5) }}</td>
+            <td>{{ cls.enrolledCount }} / {{ cls.capacity }}</td>
+            <td class="text-end">
+              <a [routerLink]="[cls.id, 'students']" class="btn btn-sm btn-outline-secondary me-2">Roster</a>
+              <a [routerLink]="[cls.id, 'attendance']" class="btn btn-sm btn-outline-primary me-2">Attendance</a>
+              <a [routerLink]="[cls.id, 'marks']" class="btn btn-sm btn-outline-success">Marks</a>
+            </td>
+          </tr>
+          <tr *ngIf="!loading && classes.length === 0">
+            <td colspan="5" class="text-center text-muted py-4">You aren't assigned to any classes yet.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

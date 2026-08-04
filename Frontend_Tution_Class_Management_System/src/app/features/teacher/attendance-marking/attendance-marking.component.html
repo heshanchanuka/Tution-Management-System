@@ -1,0 +1,52 @@
+<div class="container-fluid px-4 py-4" style="max-width: 680px;">
+  <a routerLink="/teacher/classes" class="text-decoration-none small">‹ Back to My Classes</a>
+
+  <div class="d-flex justify-content-between align-items-center mt-2 mb-4">
+    <h3 class="fw-bold mb-0" *ngIf="schoolClass">{{ schoolClass.subject }} — {{ schoolClass.gradeLevel }} Attendance</h3>
+    <a *ngIf="schoolClass" [routerLink]="['/teacher/classes', classId, 'attendance', 'history']" class="small">View history ›</a>
+  </div>
+
+  <div class="mb-3" style="max-width: 220px;">
+    <label class="form-label">Session Date</label>
+    <input type="date" class="form-control" [(ngModel)]="selectedDate" (change)="onDateChange()" />
+  </div>
+
+  <div class="card border-0 shadow-sm" *ngIf="!loading">
+    <div class="table-responsive">
+      <table class="table mb-0 align-middle">
+        <thead class="table-light">
+          <tr>
+            <th>Student</th>
+            <th>Grade</th>
+            <th style="width: 260px;">Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let row of rows">
+            <td>{{ row.student.fullName }}</td>
+            <td>{{ row.student.gradeLevel }}</td>
+            <td>
+              <div class="btn-group btn-group-sm" role="group">
+                <input type="radio" class="btn-check" [id]="'present-' + row.student.id" [value]="'PRESENT'" [(ngModel)]="row.status" [name]="'status-' + row.student.id" />
+                <label class="btn btn-outline-success" [for]="'present-' + row.student.id">Present</label>
+
+                <input type="radio" class="btn-check" [id]="'late-' + row.student.id" [value]="'LATE'" [(ngModel)]="row.status" [name]="'status-' + row.student.id" />
+                <label class="btn btn-outline-warning" [for]="'late-' + row.student.id">Late</label>
+
+                <input type="radio" class="btn-check" [id]="'absent-' + row.student.id" [value]="'ABSENT'" [(ngModel)]="row.status" [name]="'status-' + row.student.id" />
+                <label class="btn btn-outline-danger" [for]="'absent-' + row.student.id">Absent</label>
+              </div>
+            </td>
+          </tr>
+          <tr *ngIf="rows.length === 0">
+            <td colspan="3" class="text-center text-muted py-4">No students enrolled in this class yet.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <button type="button" class="btn btn-primary mt-3" [disabled]="saving || rows.length === 0" (click)="save()">
+    {{ saving ? 'Saving…' : 'Save Attendance' }}
+  </button>
+</div>

@@ -1,0 +1,62 @@
+<div class="container-fluid px-4 py-4">
+  <h3 class="fw-bold mb-4">Announcements</h3>
+
+  <div class="card border-0 shadow-sm mb-4">
+    <div class="card-body">
+      <h6 class="fw-semibold mb-3">Post a New Announcement</h6>
+      <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+        <div class="mb-3">
+          <label class="form-label">Title</label>
+          <input type="text" class="form-control" formControlName="title" />
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Message</label>
+          <textarea class="form-control" rows="3" formControlName="message"></textarea>
+        </div>
+        <div class="mb-3" style="max-width: 360px;">
+          <label class="form-label">Audience</label>
+          <select class="form-select" formControlName="targetClassId">
+            <option [ngValue]="null">Everyone (broadcast)</option>
+            <option *ngFor="let cls of classes" [ngValue]="cls.id">Only {{ cls.subject }} - {{ cls.gradeLevel }} parents</option>
+          </select>
+        </div>
+        <button type="submit" class="btn btn-primary" [disabled]="submitting">Post Announcement</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="card border-0 shadow-sm">
+    <div class="table-responsive">
+      <table class="table table-hover mb-0 align-middle">
+        <thead class="table-light">
+          <tr>
+            <th>Title</th>
+            <th>Message</th>
+            <th>Audience</th>
+            <th>Posted</th>
+            <th class="text-end">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let announcement of announcements">
+            <td>{{ announcement.title }}</td>
+            <td class="text-truncate" style="max-width: 300px;">{{ announcement.message }}</td>
+            <td>
+              <span class="badge bg-secondary" *ngIf="!announcement.targetClassId">Everyone</span>
+              <span class="badge bg-info" *ngIf="announcement.targetClassId">{{ announcement.targetClassSubject }}</span>
+            </td>
+            <td>{{ announcement.postedAt | date:'medium' }}</td>
+            <td class="text-end">
+              <button type="button" class="btn btn-sm btn-outline-danger" (click)="delete(announcement)">Delete</button>
+            </td>
+          </tr>
+          <tr *ngIf="!loading && announcements.length === 0">
+            <td colspan="5" class="text-center text-muted py-4">No announcements posted yet.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <app-pagination [page]="page" [totalPages]="totalPages" (pageChange)="onPageChange($event)"></app-pagination>
+</div>

@@ -1,0 +1,19 @@
+<nav *ngIf="totalPages > 1" class="d-flex justify-content-between align-items-center mt-3">
+  <button
+    type="button"
+    class="btn btn-outline-secondary btn-sm"
+    [disabled]="page === 0"
+    (click)="goTo(page - 1)">
+    ‹ Previous
+  </button>
+
+  <span class="text-muted small">Page {{ page + 1 }} of {{ totalPages }}</span>
+
+  <button
+    type="button"
+    class="btn btn-outline-secondary btn-sm"
+    [disabled]="page >= totalPages - 1"
+    (click)="goTo(page + 1)">
+    Next ›
+  </button>
+</nav>

@@ -1,0 +1,62 @@
+<div class="container-fluid px-4 py-4" style="max-width: 680px;">
+  <a routerLink="/parent/children" class="text-decoration-none small">‹ Back to My Children</a>
+
+  <h3 class="fw-bold mt-2 mb-3" *ngIf="child">{{ child.fullName }} — Attendance</h3>
+
+  <div class="row g-2 mb-3">
+    <div class="col-auto">
+      <span class="badge bg-success">Present: {{ presentCount }}</span>
+    </div>
+    <div class="col-auto">
+      <span class="badge bg-warning">Late: {{ lateCount }}</span>
+    </div>
+    <div class="col-auto">
+      <span class="badge bg-danger">Absent: {{ absentCount }}</span>
+    </div>
+  </div>
+
+  <div class="row g-2 align-items-end mb-3">
+    <div class="col-auto">
+      <label class="form-label">From</label>
+      <input type="date" class="form-control" [(ngModel)]="from" />
+    </div>
+    <div class="col-auto">
+      <label class="form-label">To</label>
+      <input type="date" class="form-control" [(ngModel)]="to" />
+    </div>
+    <div class="col-auto">
+      <button type="button" class="btn btn-outline-secondary" (click)="load()">Filter</button>
+    </div>
+  </div>
+
+  <div class="card border-0 shadow-sm">
+    <div class="table-responsive">
+      <table class="table table-sm mb-0 align-middle">
+        <thead class="table-light">
+          <tr>
+            <th>Date</th>
+            <th>Subject</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let record of records">
+            <td>{{ record.date }}</td>
+            <td>{{ record.subject }}</td>
+            <td>
+              <span class="badge"
+                    [class.bg-success]="record.status === 'PRESENT'"
+                    [class.bg-warning]="record.status === 'LATE'"
+                    [class.bg-danger]="record.status === 'ABSENT'">
+                {{ record.status }}
+              </span>
+            </td>
+          </tr>
+          <tr *ngIf="!loading && records.length === 0">
+            <td colspan="3" class="text-center text-muted py-4">No attendance records in this range.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,65 @@
+<div class="container-fluid px-4 py-4" style="max-width: 680px;">
+  <a routerLink="/parent/children" class="text-decoration-none small">‹ Back to My Children</a>
+
+  <h3 class="fw-bold mt-2 mb-4" *ngIf="child">{{ child.fullName }} — Fees</h3>
+
+  <div class="card border-0 shadow-sm">
+    <div class="table-responsive">
+      <table class="table mb-0 align-middle">
+        <thead class="table-light">
+          <tr>
+            <th>Class</th>
+            <th>Period</th>
+            <th>Due</th>
+            <th>Paid</th>
+            <th>Status</th>
+            <th>Due Date</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <ng-container *ngFor="let invoice of invoices">
+            <tr class="invoice-row" (click)="toggleInvoice(invoice)">
+              <td>{{ invoice.subject }}</td>
+              <td>{{ invoice.period }}</td>
+              <td>{{ invoice.amountDue | number:'1.2-2' }}</td>
+              <td>{{ invoice.amountPaid | number:'1.2-2' }}</td>
+              <td>
+                <span class="badge"
+                      [class.bg-success]="invoice.status === 'PAID'"
+                      [class.bg-warning]="invoice.status === 'PARTIAL'"
+                      [class.bg-secondary]="invoice.status === 'DUE'"
+                      [class.bg-danger]="invoice.status === 'OVERDUE'">
+                  {{ invoice.status }}
+                </span>
+              </td>
+              <td>{{ invoice.dueDate }}</td>
+              <td class="text-muted small">{{ expandedInvoiceId === invoice.id ? '▲' : '▼' }}</td>
+            </tr>
+            <tr *ngIf="expandedInvoiceId === invoice.id">
+              <td colspan="7" class="bg-light">
+                <div class="d-flex flex-wrap gap-2" *ngIf="paymentsFor(invoice.id).length > 0; else noPayments">
+                  <span class="small text-muted me-2">Payments:</span>
+                  <button
+                    type="button"
+                    class="btn btn-sm btn-outline-secondary"
+                    *ngFor="let payment of paymentsFor(invoice.id)"
+                    (click)="downloadReceipt(payment)">
+                    {{ payment.receiptNumber }} — {{ payment.amountPaid | number:'1.2-2' }} ({{ payment.method }})
+                  </button>
+                </div>
+                <ng-template #noPayments>
+                  <span class="text-muted small">No payments recorded yet.</span>
+                </ng-template>
+              </td>
+            </tr>
+          </ng-container>
+
+          <tr *ngIf="!loading && invoices.length === 0">
+            <td colspan="7" class="text-center text-muted py-4">No fee invoices yet.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

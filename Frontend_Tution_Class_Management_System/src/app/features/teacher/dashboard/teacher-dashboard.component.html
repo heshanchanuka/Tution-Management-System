@@ -1,0 +1,51 @@
+<div class="container-fluid px-4 py-4">
+  <h3 class="fw-bold mb-1">Welcome, {{ authService.getUser()?.fullName }}</h3>
+  <p class="text-muted mb-4">Here's a quick look at your classes.</p>
+
+  <div class="row g-3 mb-4" *ngIf="stats">
+    <div class="col-md-4 col-6">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body">
+          <div class="text-muted small">My Classes</div>
+          <div class="fs-3 fw-bold text-primary">{{ stats.totalClasses }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4 col-6">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body">
+          <div class="text-muted small">Total Students</div>
+          <div class="fs-3 fw-bold text-success">{{ stats.totalStudents }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4 col-6">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body">
+          <div class="text-muted small">Classes Today</div>
+          <div class="fs-3 fw-bold text-info">{{ stats.classesToday }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-3" *ngIf="!loading">
+    <div class="col-md-4" *ngFor="let cls of classes">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body">
+          <h5 class="fw-semibold mb-1">{{ cls.subject }}</h5>
+          <p class="text-muted small mb-2">{{ cls.gradeLevel }} · {{ cls.dayOfWeek | titlecase }} {{ cls.startTime.slice(0,5) }}–{{ cls.endTime.slice(0,5) }}</p>
+          <p class="small mb-3">{{ cls.enrolledCount }} / {{ cls.capacity }} students enrolled</p>
+          <div class="d-flex gap-2">
+            <a [routerLink]="['/teacher/classes', cls.id, 'attendance']" class="btn btn-sm btn-outline-primary">Attendance</a>
+            <a [routerLink]="['/teacher/classes', cls.id, 'marks']" class="btn btn-sm btn-outline-success">Marks</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12" *ngIf="classes.length === 0">
+      <div class="alert alert-info mb-0">You aren't assigned to any classes yet.</div>
+    </div>
+  </div>
+</div>

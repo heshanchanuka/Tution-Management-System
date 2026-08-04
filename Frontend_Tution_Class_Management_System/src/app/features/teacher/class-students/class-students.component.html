@@ -1,0 +1,29 @@
+<div class="container-fluid px-4 py-4" style="max-width: 640px;">
+  <a routerLink="/teacher/classes" class="text-decoration-none small">‹ Back to My Classes</a>
+
+  <h3 class="fw-bold mt-2 mb-4" *ngIf="schoolClass">{{ schoolClass.subject }} — {{ schoolClass.gradeLevel }} Roster</h3>
+
+  <div class="card border-0 shadow-sm">
+    <div class="table-responsive">
+      <table class="table table-hover mb-0 align-middle">
+        <thead class="table-light">
+          <tr>
+            <th>Full Name</th>
+            <th>Grade</th>
+            <th>Parent</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let student of students">
+            <td>{{ student.fullName }}</td>
+            <td>{{ student.gradeLevel }}</td>
+            <td>{{ student.parentName }}</td>
+          </tr>
+          <tr *ngIf="students.length === 0">
+            <td colspan="3" class="text-center text-muted py-4">No students enrolled yet.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

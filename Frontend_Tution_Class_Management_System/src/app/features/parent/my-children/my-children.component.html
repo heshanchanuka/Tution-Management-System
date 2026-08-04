@@ -1,0 +1,33 @@
+<div class="container-fluid px-4 py-4">
+  <h3 class="fw-bold mb-3">My Children</h3>
+
+  <div class="card border-0 shadow-sm">
+    <div class="table-responsive">
+      <table class="table table-hover mb-0 align-middle">
+        <thead class="table-light">
+          <tr>
+            <th>Full Name</th>
+            <th>Grade</th>
+            <th>Date of Birth</th>
+            <th class="text-end">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let child of children">
+            <td>{{ child.fullName }}</td>
+            <td>{{ child.gradeLevel }}</td>
+            <td>{{ child.dateOfBirth || '—' }}</td>
+            <td class="text-end">
+              <a [routerLink]="[child.id, 'attendance']" class="btn btn-sm btn-outline-primary me-2">Attendance</a>
+              <a [routerLink]="[child.id, 'fees']" class="btn btn-sm btn-outline-success me-2">Fees</a>
+              <a [routerLink]="[child.id, 'results']" class="btn btn-sm btn-outline-warning">Results</a>
+            </td>
+          </tr>
+          <tr *ngIf="!loading && children.length === 0">
+            <td colspan="4" class="text-center text-muted py-4">No children are linked to your account yet.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,50 @@
+<div class="container-fluid px-4 py-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h3 class="fw-bold mb-0">Students</h3>
+    <a routerLink="new" class="btn btn-primary btn-sm">+ Add Student</a>
+  </div>
+
+  <div class="input-group mb-3" style="max-width: 320px;">
+    <input
+      type="text"
+      class="form-control"
+      placeholder="Search by name…"
+      [(ngModel)]="searchTerm"
+      (keyup.enter)="search()"
+    />
+    <button class="btn btn-outline-secondary" type="button" (click)="search()">Search</button>
+  </div>
+
+  <div class="card border-0 shadow-sm">
+    <div class="table-responsive">
+      <table class="table table-hover mb-0 align-middle">
+        <thead class="table-light">
+          <tr>
+            <th>Full Name</th>
+            <th>Date of Birth</th>
+            <th>Grade</th>
+            <th>Parent</th>
+            <th class="text-end">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let student of students">
+            <td>{{ student.fullName }}</td>
+            <td>{{ student.dateOfBirth || '—' }}</td>
+            <td>{{ student.gradeLevel }}</td>
+            <td>{{ student.parentName }}</td>
+            <td class="text-end">
+              <a [routerLink]="[student.id, 'edit']" class="btn btn-sm btn-outline-primary me-2">Edit</a>
+              <button type="button" class="btn btn-sm btn-outline-danger" (click)="delete(student)">Delete</button>
+            </td>
+          </tr>
+          <tr *ngIf="!loading && students.length === 0">
+            <td colspan="5" class="text-center text-muted py-4">No students found.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <app-pagination [page]="page" [totalPages]="totalPages" (pageChange)="onPageChange($event)"></app-pagination>
+</div>

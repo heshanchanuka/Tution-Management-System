@@ -1,0 +1,57 @@
+<div class="container-fluid px-4 py-4">
+  <h3 class="fw-bold mb-1">Welcome, {{ authService.getUser()?.fullName }}</h3>
+  <p class="text-muted mb-4">Here's a quick look at your children.</p>
+
+  <div class="row g-3 mb-4" *ngIf="stats">
+    <div class="col-md-4 col-6">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body">
+          <div class="text-muted small">Children</div>
+          <div class="fs-3 fw-bold text-primary">{{ stats.totalChildren }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4 col-6">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body">
+          <div class="text-muted small">Outstanding Balance</div>
+          <div class="fs-3 fw-bold" [class.text-danger]="stats.totalOutstandingBalance > 0" [class.text-success]="stats.totalOutstandingBalance === 0">
+            Rs. {{ stats.totalOutstandingBalance | number:'1.2-2' }}
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4 col-6">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body">
+          <div class="text-muted small">Overall Attendance</div>
+          <div class="fs-3 fw-bold text-info">{{ stats.overallAttendanceRate | number:'1.0-1' }}%</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-3" *ngIf="!loading">
+    <div class="col-md-4" *ngFor="let child of children">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body">
+          <h5 class="fw-semibold mb-1">{{ child.fullName }}</h5>
+          <p class="text-muted small mb-3">{{ child.gradeLevel }}</p>
+          <div class="d-flex flex-wrap gap-2">
+            <a [routerLink]="['/parent/children', child.id, 'attendance']" class="btn btn-sm btn-outline-primary">Attendance</a>
+            <a [routerLink]="['/parent/children', child.id, 'fees']" class="btn btn-sm btn-outline-success">Fees</a>
+            <a [routerLink]="['/parent/children', child.id, 'results']" class="btn btn-sm btn-outline-warning">Results</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12" *ngIf="children.length === 0">
+      <div class="alert alert-info mb-0">No children are linked to your account yet.</div>
+    </div>
+  </div>
+
+  <div class="mt-4">
+    <a routerLink="/parent/announcements" class="btn btn-outline-secondary btn-sm">View Announcements</a>
+  </div>
+</div>

@@ -1,0 +1,168 @@
+<div class="container-fluid px-4 py-4">
+  <h3 class="fw-bold mb-4">Fees &amp; Payments</h3>
+
+  <!-- Generate invoices -->
+  <div class="card border-0 shadow-sm mb-4">
+    <div class="card-body">
+      <h6 class="fw-semibold mb-3">Generate Invoices for a Class</h6>
+      <form [formGroup]="generateForm" (ngSubmit)="generateInvoices()" novalidate>
+        <div class="row g-2 align-items-end">
+          <div class="col-md-4">
+            <label class="form-label">Class</label>
+            <select class="form-select" formControlName="classId">
+              <option [ngValue]="null" disabled>Select a class…</option>
+              <option *ngFor="let cls of classes" [ngValue]="cls.id">{{ cls.subject }} - {{ cls.gradeLevel }}</option>
+            </select>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">Billing Period</label>
+            <input type="text" class="form-control" formControlName="period" placeholder="e.g. 2026-08" />
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">Due Date</label>
+            <input type="date" class="form-control" formControlName="dueDate" />
+          </div>
+          <div class="col-md-2">
+            <button type="submit" class="btn btn-primary w-100" [disabled]="generating">Generate</button>
+          </div>
+        </div>
+      </form>
+      <p class="text-muted small mt-2 mb-0">
+        Creates one invoice per enrolled student, using the class's fee amount. Students already billed for this period are skipped.
+      </p>
+    </div>
+  </div>
+
+  <!-- Student invoices + payments -->
+  <div class="card border-0 shadow-sm mb-4">
+    <div class="card-body">
+      <h6 class="fw-semibold mb-3">Student Invoices</h6>
+      <div class="mb-3" style="max-width: 360px;">
+        <select class="form-select" [(ngModel)]="selectedStudentId" (ngModelChange)="onStudentSelected()">
+          <option [ngValue]="null" disabled>Select a student…</option>
+          <option *ngFor="let student of students" [ngValue]="student.id">{{ student.fullName }} ({{ student.gradeLevel }})</option>
+        </select>
+      </div>
+
+      <div class="table-responsive" *ngIf="selectedStudentId">
+        <table class="table table-hover align-middle">
+          <thead class="table-light">
+            <tr>
+              <th>Class</th>
+              <th>Period</th>
+              <th>Due</th>
+              <th>Paid</th>
+              <th>Status</th>
+              <th>Due Date</th>
+              <th class="text-end">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <ng-container *ngFor="let invoice of invoices">
+              <tr>
+                <td>{{ invoice.subject }}</td>
+                <td>{{ invoice.period }}</td>
+                <td>{{ invoice.amountDue | number:'1.2-2' }}</td>
+                <td>{{ invoice.amountPaid | number:'1.2-2' }}</td>
+                <td>
+                  <span class="badge"
+                        [class.bg-success]="invoice.status === 'PAID'"
+                        [class.bg-warning]="invoice.status === 'PARTIAL'"
+                        [class.bg-secondary]="invoice.status === 'DUE'"
+                        [class.bg-danger]="invoice.status === 'OVERDUE'">
+                    {{ invoice.status }}
+                  </span>
+                </td>
+                <td>{{ invoice.dueDate }}</td>
+                <td class="text-end">
+                  <button type="button" class="btn btn-sm btn-outline-primary" *ngIf="invoice.status !== 'PAID'" (click)="openPaymentForm(invoice)">
+                    Record Payment
+                  </button>
+                </td>
+              </tr>
+
+              <tr *ngIf="paymentsFor(invoice.id).length > 0">
+                <td colspan="7" class="bg-light">
+                  <div class="d-flex flex-wrap gap-2">
+                    <span class="small text-muted me-2">Payments:</span>
+                    <button
+                      type="button"
+                      class="btn btn-sm btn-outline-secondary"
+                      *ngFor="let payment of paymentsFor(invoice.id)"
+                      (click)="downloadReceipt(payment)">
+                      {{ payment.receiptNumber }} — {{ payment.amountPaid | number:'1.2-2' }} ({{ payment.method }})
+                    </button>
+                  </div>
+                </td>
+              </tr>
+
+              <tr *ngIf="payingInvoiceId === invoice.id">
+                <td colspan="7">
+                  <form [formGroup]="paymentForm" (ngSubmit)="submitPayment()" class="row g-2 align-items-end">
+                    <div class="col-md-3">
+                      <label class="form-label">Amount</label>
+                      <input type="number" step="0.01" class="form-control" formControlName="amountPaid" />
+                    </div>
+                    <div class="col-md-3">
+                      <label class="form-label">Date</label>
+                      <input type="date" class="form-control" formControlName="paymentDate" />
+                    </div>
+                    <div class="col-md-3">
+                      <label class="form-label">Method</label>
+                      <select class="form-select" formControlName="method">
+                        <option value="CASH">Cash</option>
+                        <option value="CARD">Card</option>
+                        <option value="BANK_TRANSFER">Bank Transfer</option>
+                      </select>
+                    </div>
+                    <div class="col-md-3 d-flex gap-2">
+                      <button type="submit" class="btn btn-success" [disabled]="submittingPayment">Save</button>
+                      <button type="button" class="btn btn-outline-secondary" (click)="cancelPayment()">Cancel</button>
+                    </div>
+                  </form>
+                </td>
+              </tr>
+            </ng-container>
+
+            <tr *ngIf="!loadingInvoices && invoices.length === 0">
+              <td colspan="7" class="text-center text-muted py-4">No invoices for this student yet.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Overdue / defaulters -->
+  <div class="card border-0 shadow-sm">
+    <div class="card-body">
+      <h6 class="fw-semibold mb-3">Overdue Invoices</h6>
+      <div class="table-responsive">
+        <table class="table table-sm align-middle">
+          <thead class="table-light">
+            <tr>
+              <th>Student</th>
+              <th>Class</th>
+              <th>Period</th>
+              <th>Balance</th>
+              <th>Due Date</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let invoice of overdue">
+              <td>{{ invoice.studentName }}</td>
+              <td>{{ invoice.subject }}</td>
+              <td>{{ invoice.period }}</td>
+              <td>{{ (invoice.amountDue - invoice.amountPaid) | number:'1.2-2' }}</td>
+              <td>{{ invoice.dueDate }}</td>
+            </tr>
+            <tr *ngIf="overdue.length === 0">
+              <td colspan="5" class="text-center text-muted py-4">No overdue invoices. Nice.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <app-pagination [page]="overduePage" [totalPages]="overdueTotalPages" (pageChange)="onOverduePageChange($event)"></app-pagination>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,61 @@
+<div class="container-fluid px-4 py-4">
+  <h3 class="fw-bold mb-1">Welcome, {{ authService.getUser()?.fullName }}</h3>
+  <p class="text-muted mb-4">Here's how the institute is doing.</p>
+
+  <div class="row g-3" *ngIf="stats">
+    <div class="col-md-3 col-6">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body">
+          <div class="text-muted small">Students</div>
+          <div class="fs-3 fw-bold text-primary">{{ stats.totalStudents }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3 col-6">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body">
+          <div class="text-muted small">Teachers</div>
+          <div class="fs-3 fw-bold text-success">{{ stats.totalTeachers }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3 col-6">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body">
+          <div class="text-muted small">Parents</div>
+          <div class="fs-3 fw-bold text-warning">{{ stats.totalParents }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3 col-6">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body">
+          <div class="text-muted small">Classes</div>
+          <div class="fs-3 fw-bold text-info">{{ stats.totalClasses }}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-6">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body">
+          <div class="text-muted small">This Month's Revenue</div>
+          <div class="fs-3 fw-bold text-success">Rs. {{ stats.monthlyRevenue | number:'1.2-2' }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body">
+          <div class="text-muted small">Today's Attendance Rate</div>
+          <div class="fs-3 fw-bold text-primary">{{ stats.todayAttendanceRate | number:'1.0-1' }}%</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="mt-4">
+    <a routerLink="/admin/reports" class="btn btn-outline-primary btn-sm me-2">View Reports</a>
+    <a routerLink="/admin/announcements" class="btn btn-outline-secondary btn-sm">Manage Announcements</a>
+  </div>
+</div>

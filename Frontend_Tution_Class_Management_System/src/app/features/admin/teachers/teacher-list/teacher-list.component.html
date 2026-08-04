@@ -1,0 +1,52 @@
+<div class="container-fluid px-4 py-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h3 class="fw-bold mb-0">Teachers</h3>
+    <a routerLink="new" class="btn btn-primary btn-sm">+ Add Teacher</a>
+  </div>
+
+  <div class="input-group mb-3" style="max-width: 320px;">
+    <input
+      type="text"
+      class="form-control"
+      placeholder="Search by name…"
+      [(ngModel)]="searchTerm"
+      (keyup.enter)="search()"
+    />
+    <button class="btn btn-outline-secondary" type="button" (click)="search()">Search</button>
+  </div>
+
+  <div class="card border-0 shadow-sm">
+    <div class="table-responsive">
+      <table class="table table-hover mb-0 align-middle">
+        <thead class="table-light">
+          <tr>
+            <th>Username</th>
+            <th>Full Name</th>
+            <th>Phone</th>
+            <th>Subject</th>
+            <th>Qualifications</th>
+            <th class="text-end">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let teacher of teachers">
+            <td>{{ teacher.username }}</td>
+            <td>{{ teacher.fullName }}</td>
+            <td>{{ teacher.phone || '—' }}</td>
+            <td>{{ teacher.subjectSpecialty || '—' }}</td>
+            <td>{{ teacher.qualifications || '—' }}</td>
+            <td class="text-end">
+              <a [routerLink]="[teacher.id, 'edit']" class="btn btn-sm btn-outline-primary me-2">Edit</a>
+              <button type="button" class="btn btn-sm btn-outline-danger" (click)="delete(teacher)">Delete</button>
+            </td>
+          </tr>
+          <tr *ngIf="!loading && teachers.length === 0">
+            <td colspan="6" class="text-center text-muted py-4">No teachers found.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <app-pagination [page]="page" [totalPages]="totalPages" (pageChange)="onPageChange($event)"></app-pagination>
+</div>

@@ -1,0 +1,42 @@
+<div class="container-fluid px-4 py-4" style="max-width: 680px;">
+  <a routerLink="/parent/children" class="text-decoration-none small">‹ Back to My Children</a>
+
+  <div class="d-flex justify-content-between align-items-center mt-2 mb-4">
+    <h3 class="fw-bold mb-0" *ngIf="child">{{ child.fullName }} — Exam Results</h3>
+    <button type="button" class="btn btn-outline-primary btn-sm" [disabled]="downloadingReportCard" (click)="downloadReportCard()">
+      {{ downloadingReportCard ? 'Preparing…' : 'Download Report Card' }}
+    </button>
+  </div>
+
+  <div class="card border-0 shadow-sm">
+    <div class="table-responsive">
+      <table class="table mb-0 align-middle">
+        <thead class="table-light">
+          <tr>
+            <th>Subject</th>
+            <th>Exam</th>
+            <th>Date</th>
+            <th>Marks</th>
+            <th>Grade</th>
+            <th>Remarks</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let result of results">
+            <td>{{ result.subject }}</td>
+            <td>{{ result.examName }}</td>
+            <td>{{ result.examDate }}</td>
+            <td>{{ result.marksObtained }} / {{ result.maxMarks }}</td>
+            <td>
+              <span class="badge bg-primary">{{ result.grade }}</span>
+            </td>
+            <td class="text-muted small">{{ result.remarks || '—' }}</td>
+          </tr>
+          <tr *ngIf="!loading && results.length === 0">
+            <td colspan="6" class="text-center text-muted py-4">No exam results recorded yet.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

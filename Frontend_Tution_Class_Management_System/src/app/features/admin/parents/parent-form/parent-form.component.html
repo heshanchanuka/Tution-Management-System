@@ -1,0 +1,47 @@
+<div class="container-fluid px-4 py-4" style="max-width: 560px;">
+  <h3 class="fw-bold mb-4">{{ isEditMode ? 'Edit Parent' : 'Add Parent' }}</h3>
+
+  <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+    <div class="row" *ngIf="!isEditMode">
+      <div class="col-md-6 mb-3">
+        <label class="form-label">Username</label>
+        <input type="text" formControlName="username" class="form-control"
+               [class.is-invalid]="f['username'].invalid && f['username'].touched" />
+      </div>
+      <div class="col-md-6 mb-3">
+        <label class="form-label">Initial Password</label>
+        <input type="text" formControlName="password" class="form-control"
+               [class.is-invalid]="f['password'].invalid && f['password'].touched" />
+      </div>
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">Full Name</label>
+      <input type="text" formControlName="fullName" class="form-control"
+             [class.is-invalid]="f['fullName'].invalid && f['fullName'].touched" />
+      <div class="invalid-feedback" *ngIf="f['fullName'].invalid && f['fullName'].touched">
+        Full name is required.
+      </div>
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">Phone</label>
+      <input type="text" formControlName="phone" class="form-control" />
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">Address</label>
+      <input type="text" formControlName="address" class="form-control" />
+    </div>
+
+    <div class="mb-4">
+      <label class="form-label">Occupation</label>
+      <input type="text" formControlName="occupation" class="form-control" />
+    </div>
+
+    <button type="submit" class="btn btn-primary" [disabled]="submitting">
+      {{ isEditMode ? 'Save Changes' : 'Create Parent' }}
+    </button>
+    <a routerLink="/admin/parents" class="btn btn-outline-secondary ms-2">Cancel</a>
+  </form>
+</div>

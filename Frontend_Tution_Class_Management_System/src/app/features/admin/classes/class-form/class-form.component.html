@@ -1,0 +1,65 @@
+<div class="container-fluid px-4 py-4" style="max-width: 560px;">
+  <h3 class="fw-bold mb-4">{{ isEditMode ? 'Edit Class' : 'Add Class' }}</h3>
+
+  <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+    <div class="mb-3">
+      <label class="form-label">Subject</label>
+      <input type="text" formControlName="subject" class="form-control" placeholder="e.g. Mathematics"
+             [class.is-invalid]="f['subject'].invalid && f['subject'].touched" />
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">Grade Level</label>
+      <input type="text" formControlName="gradeLevel" class="form-control" placeholder="e.g. Grade 8"
+             [class.is-invalid]="f['gradeLevel'].invalid && f['gradeLevel'].touched" />
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">Teacher</label>
+      <select formControlName="teacherId" class="form-select"
+              [class.is-invalid]="f['teacherId'].invalid && f['teacherId'].touched">
+        <option [ngValue]="null" disabled>Select a teacher…</option>
+        <option *ngFor="let teacher of teachers" [ngValue]="teacher.id">{{ teacher.fullName }} ({{ teacher.subjectSpecialty }})</option>
+      </select>
+    </div>
+
+    <div class="row">
+      <div class="col-md-4 mb-3">
+        <label class="form-label">Day</label>
+        <select formControlName="dayOfWeek" class="form-select"
+                [class.is-invalid]="f['dayOfWeek'].invalid && f['dayOfWeek'].touched">
+          <option [ngValue]="null" disabled>Select…</option>
+          <option *ngFor="let day of days" [ngValue]="day">{{ day | titlecase }}</option>
+        </select>
+      </div>
+      <div class="col-md-4 mb-3">
+        <label class="form-label">Start Time</label>
+        <input type="time" formControlName="startTime" class="form-control"
+               [class.is-invalid]="f['startTime'].invalid && f['startTime'].touched" />
+      </div>
+      <div class="col-md-4 mb-3">
+        <label class="form-label">End Time</label>
+        <input type="time" formControlName="endTime" class="form-control"
+               [class.is-invalid]="f['endTime'].invalid && f['endTime'].touched" />
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-md-6 mb-3">
+        <label class="form-label">Fee Amount (LKR)</label>
+        <input type="number" step="0.01" formControlName="feeAmount" class="form-control"
+               [class.is-invalid]="f['feeAmount'].invalid && f['feeAmount'].touched" />
+      </div>
+      <div class="col-md-6 mb-4">
+        <label class="form-label">Capacity</label>
+        <input type="number" formControlName="capacity" class="form-control"
+               [class.is-invalid]="f['capacity'].invalid && f['capacity'].touched" />
+      </div>
+    </div>
+
+    <button type="submit" class="btn btn-primary" [disabled]="submitting">
+      {{ isEditMode ? 'Save Changes' : 'Create Class' }}
+    </button>
+    <a routerLink="/admin/classes" class="btn btn-outline-secondary ms-2">Cancel</a>
+  </form>
+</div>
