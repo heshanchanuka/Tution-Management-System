@@ -14,4 +14,7 @@ public interface ParentProfileRepo extends JpaRepository<ParentProfile, Long> {
     Page<ParentProfile> findByAppUser_FullNameContainingIgnoreCase(String search, Pageable pageable);
 
     Optional<ParentProfile> findByAppUser_Username(String username);
+
+    /** Self-registered parents still waiting for admin approval. */
+    Page<ParentProfile> findByAppUser_EnabledFalse(Pageable pageable);
 }

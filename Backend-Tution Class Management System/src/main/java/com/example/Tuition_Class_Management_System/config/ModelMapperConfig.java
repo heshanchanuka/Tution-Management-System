@@ -46,6 +46,8 @@ public class ModelMapperConfig {
             m.map(src -> src.getAppUser().getUsername(), ParentResponse::setUsername);
             m.map(src -> src.getAppUser().getFullName(), ParentResponse::setFullName);
             m.map(src -> src.getAppUser().getPhone(), ParentResponse::setPhone);
+            m.map(src -> src.getAppUser().isEnabled(), ParentResponse::setEnabled);
+            m.map(src -> src.getAppUser().getCreatedAt(), ParentResponse::setCreatedAt);
         });
 
         modelMapper.createTypeMap(Student.class, StudentResponse.class).addMappings(m -> {

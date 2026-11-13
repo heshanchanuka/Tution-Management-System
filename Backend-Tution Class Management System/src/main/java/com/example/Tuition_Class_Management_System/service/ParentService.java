@@ -1,6 +1,7 @@
 package com.example.Tuition_Class_Management_System.service;
 
 import com.example.Tuition_Class_Management_System.dto.PageResponse;
+import com.example.Tuition_Class_Management_System.dto.RegisterRequest;
 import com.example.Tuition_Class_Management_System.dto.parent.ParentCreateRequest;
 import com.example.Tuition_Class_Management_System.dto.parent.ParentResponse;
 import com.example.Tuition_Class_Management_System.dto.parent.ParentUpdateRequest;
@@ -46,29 +47,46 @@ public class ParentService {
 
     @Transactional
     public ParentResponse createParent(ParentCreateRequest request) {
-        if (appUserRepo.existsByUsername(request.getUsername())) {
-            throw new DuplicateResourceException("A user with username '" + request.getUsername() + "' already exists");
-        }
-
-        Role parentRole = roleRepo.findById("PARENT")
-                .orElseThrow(() -> new IllegalStateException("PARENT role is not seeded"));
-
-        AppUser user = new AppUser();
-        user.setUsername(request.getUsername());
-        user.setPassword(passwordEncoder.encode(request.getPassword()));
-        user.setFullName(request.getFullName());
-        user.setPhone(request.getPhone());
-        user.setEnabled(true);
-        user.setRoles(Set.of(parentRole));
-        appUserRepo.save(user);
-
-        ParentProfile profile = new ParentProfile();
-        profile.setAppUser(user);
-        profile.setAddress(request.getAddress());
-        profile.setOccupation(request.getOccupation());
-        parentProfileRepo.save(profile);
-
+        // Admin-created accounts are trusted, so they're active straight away.
+        ParentProfile profile = createAccount(request.getUsername(), request.getPassword(), request.getFullName(),
+                request.getPhone(), request.getAddress(), request.getOccupation(), true);
         return toResponse(profile);
+    }
+
+    /**
+     * Self-registration from the public sign-up page. The account is created
+     * disabled and can't log in until an admin approves it.
+     */
+    @Transactional
+    public ParentProfile registerParent(RegisterRequest request) {
+        return createAccount(request.getUsername(), request.getPassword(), request.getFullName(),
+                request.getPhone(), request.getAddress(), request.getOccupation(), false);
+    }
+
+    public PageResponse<ParentResponse> listPendingParents(Pageable pageable) {
+        return PageResponse.from(parentProfileRepo.findByAppUser_EnabledFalse(pageable), this::toResponse);
+    }
+
+    @Transactional
+    public ParentResponse approveParent(Long id) {
+        ParentProfile profile = findByIdOrThrow(id);
+        AppUser user = profile.getAppUser();
+        if (user.isEnabled()) {
+            throw new BusinessRuleViolationException("This parent account is already active");
+        }
+        user.setEnabled(true);
+        return toResponse(profile);
+    }
+
+    /** Rejecting a pending registration removes it entirely so the username can be reused. */
+    @Transactional
+    public void rejectParent(Long id) {
+        ParentProfile profile = findByIdOrThrow(id);
+        if (profile.getAppUser().isEnabled()) {
+            throw new BusinessRuleViolationException(
+                    "Only pending registrations can be rejected - this parent account is already active");
+        }
+        deleteParent(id);
     }
 
     public PageResponse<ParentResponse> listParents(String search, Pageable pageable) {
@@ -107,6 +125,32 @@ public class ParentService {
         AppUser user = profile.getAppUser();
         parentProfileRepo.delete(profile);
         appUserRepo.delete(user);
+    }
+
+    private ParentProfile createAccount(String username, String rawPassword, String fullName,
+                                        String phone, String address, String occupation, boolean enabled) {
+        if (appUserRepo.existsByUsername(username)) {
+            throw new DuplicateResourceException("A user with username '" + username + "' already exists");
+        }
+
+        Role parentRole = roleRepo.findById("PARENT")
+                .orElseThrow(() -> new IllegalStateException("PARENT role is not seeded"));
+
+        AppUser user = new AppUser();
+        user.setUsername(username);
+        user.setPassword(passwordEncoder.encode(rawPassword));
+        user.setFullName(fullName);
+        user.setPhone(phone);
+        user.setEnabled(enabled);
+        user.setRoles(Set.of(parentRole));
+        appUserRepo.save(user);
+
+        ParentProfile profile = new ParentProfile();
+        profile.setAppUser(user);
+        profile.setAddress(address);
+        profile.setOccupation(occupation);
+        parentProfileRepo.save(profile);
+        return profile;
     }
 
     private ParentResponse toResponse(ParentProfile profile) {

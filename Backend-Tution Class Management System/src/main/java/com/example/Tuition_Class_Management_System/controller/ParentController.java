@@ -37,6 +37,26 @@ public class ParentController {
         return ResponseEntity.ok(parentService.listParents(search, pageable));
     }
 
+    /** Self-registered parents waiting for approval. */
+    @GetMapping("/pending")
+    public ResponseEntity<PageResponse<ParentResponse>> listPending(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("id"));
+        return ResponseEntity.ok(parentService.listPendingParents(pageable));
+    }
+
+    @PatchMapping("/{id}/approve")
+    public ResponseEntity<ParentResponse> approve(@PathVariable Long id) {
+        return ResponseEntity.ok(parentService.approveParent(id));
+    }
+
+    @DeleteMapping("/{id}/reject")
+    public ResponseEntity<Void> reject(@PathVariable Long id) {
+        parentService.rejectParent(id);
+        return ResponseEntity.noContent().build();
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<ParentResponse> get(@PathVariable Long id) {
         return ResponseEntity.ok(parentService.getParent(id));
