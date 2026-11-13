@@ -45,6 +45,15 @@ export class LoginComponent {
       },
       error: (err) => {
         this.submitting = false;
+        if (err?.status === 403) {
+          // Correct password, but a self-registered account the admin hasn't approved yet.
+          this.toastr.warning(
+            err?.error?.message ?? 'Your account is pending admin approval',
+            'Account pending',
+            { timeOut: 6000 }
+          );
+          return;
+        }
         const message = err?.error?.message ?? 'Login failed. Please try again.';
         this.toastr.error(message, 'Login failed');
       }

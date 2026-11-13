@@ -4,49 +4,119 @@
     <a routerLink="new" class="btn btn-primary btn-sm">+ Add Parent</a>
   </div>
 
-  <div class="input-group mb-3" style="max-width: 320px;">
-    <input
-      type="text"
-      class="form-control"
-      placeholder="Search by name…"
-      [(ngModel)]="searchTerm"
-      (keyup.enter)="search()"
-    />
-    <button class="btn btn-outline-secondary" type="button" (click)="search()">Search</button>
-  </div>
+  <ul class="nav nav-pills mb-3">
+    <li class="nav-item">
+      <button type="button" class="nav-link" [class.active]="activeTab === 'all'" (click)="selectTab('all')">
+        All Parents
+      </button>
+    </li>
+    <li class="nav-item">
+      <button type="button" class="nav-link" [class.active]="activeTab === 'pending'" (click)="selectTab('pending')">
+        Pending Approvals
+        <span class="badge ms-1" *ngIf="pendingTotal > 0"
+              [class.bg-warning]="activeTab !== 'pending'" [class.text-dark]="activeTab !== 'pending'"
+              [class.bg-light]="activeTab === 'pending'" [class.text-primary]="activeTab === 'pending'">
+          {{ pendingTotal }}
+        </span>
+      </button>
+    </li>
+  </ul>
 
-  <div class="card border-0 shadow-sm">
-    <div class="table-responsive">
-      <table class="table table-hover mb-0 align-middle">
-        <thead class="table-light">
-          <tr>
-            <th>Username</th>
-            <th>Full Name</th>
-            <th>Phone</th>
-            <th>Address</th>
-            <th>Occupation</th>
-            <th class="text-end">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let parent of parents">
-            <td>{{ parent.username }}</td>
-            <td>{{ parent.fullName }}</td>
-            <td>{{ parent.phone || '—' }}</td>
-            <td>{{ parent.address || '—' }}</td>
-            <td>{{ parent.occupation || '—' }}</td>
-            <td class="text-end">
-              <a [routerLink]="[parent.id, 'edit']" class="btn btn-sm btn-outline-primary me-2">Edit</a>
-              <button type="button" class="btn btn-sm btn-outline-danger" (click)="delete(parent)">Delete</button>
-            </td>
-          </tr>
-          <tr *ngIf="!loading && parents.length === 0">
-            <td colspan="6" class="text-center text-muted py-4">No parents found.</td>
-          </tr>
-        </tbody>
-      </table>
+  <!-- All parents -->
+  <ng-container *ngIf="activeTab === 'all'">
+    <div class="input-group mb-3" style="max-width: 320px;">
+      <input
+        type="text"
+        class="form-control"
+        placeholder="Search by name…"
+        [(ngModel)]="searchTerm"
+        (keyup.enter)="search()"
+      />
+      <button class="btn btn-outline-secondary" type="button" (click)="search()">Search</button>
     </div>
-  </div>
 
-  <app-pagination [page]="page" [totalPages]="totalPages" (pageChange)="onPageChange($event)"></app-pagination>
+    <div class="card border-0 shadow-sm">
+      <div class="table-responsive">
+        <table class="table table-hover mb-0 align-middle">
+          <thead class="table-light">
+            <tr>
+              <th>Username</th>
+              <th>Full Name</th>
+              <th>Phone</th>
+              <th>Address</th>
+              <th>Occupation</th>
+              <th class="text-end">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let parent of parents">
+              <td>
+                {{ parent.username }}
+                <span class="badge bg-warning text-dark ms-1" *ngIf="!parent.enabled">Pending</span>
+              </td>
+              <td>{{ parent.fullName }}</td>
+              <td>{{ parent.phone || '—' }}</td>
+              <td>{{ parent.address || '—' }}</td>
+              <td>{{ parent.occupation || '—' }}</td>
+              <td class="text-end">
+                <a [routerLink]="[parent.id, 'edit']" class="btn btn-sm btn-outline-primary me-2">Edit</a>
+                <button type="button" class="btn btn-sm btn-outline-danger" (click)="delete(parent)">Delete</button>
+              </td>
+            </tr>
+            <tr *ngIf="!loading && parents.length === 0">
+              <td colspan="6" class="text-center text-muted py-4">No parents found.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <app-pagination [page]="page" [totalPages]="totalPages" (pageChange)="onPageChange($event)"></app-pagination>
+  </ng-container>
+
+  <!-- Pending self-registrations -->
+  <ng-container *ngIf="activeTab === 'pending'">
+    <p class="text-muted small">
+      Parents who registered themselves. They can't sign in until you approve them. Rejecting deletes the registration.
+    </p>
+
+    <div class="card border-0 shadow-sm">
+      <div class="table-responsive">
+        <table class="table table-hover mb-0 align-middle">
+          <thead class="table-light">
+            <tr>
+              <th>Full Name</th>
+              <th>Username</th>
+              <th>Phone</th>
+              <th>Registered</th>
+              <th class="text-end">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let parent of pending">
+              <td>{{ parent.fullName }}</td>
+              <td>{{ parent.username }}</td>
+              <td>{{ parent.phone || '—' }}</td>
+              <td>{{ parent.createdAt ? (parent.createdAt | date:'medium') : '—' }}</td>
+              <td class="text-end text-nowrap">
+                <button type="button" class="btn btn-sm btn-success me-2"
+                        [disabled]="actingOnId === parent.id" (click)="approve(parent)">
+                  Approve
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-danger"
+                        [disabled]="actingOnId === parent.id" (click)="reject(parent)">
+                  Reject
+                </button>
+              </td>
+            </tr>
+            <tr *ngIf="!loadingPending && pending.length === 0">
+              <td colspan="5" class="text-center text-muted py-4">No registrations waiting for approval.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <app-pagination [page]="pendingPage" [totalPages]="pendingTotalPages" (pageChange)="onPendingPageChange($event)"></app-pagination>
+  </ng-container>
 </div>

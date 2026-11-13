@@ -41,7 +41,8 @@ export class StudentFormComponent implements OnInit {
 
   ngOnInit(): void {
     this.parentService.listAll().subscribe((result) => {
-      this.parents = result.content;
+      // Pending (unapproved) self-registrations can't be linked to a student yet.
+      this.parents = result.content.filter((p) => p.enabled);
     });
 
     const idParam = this.route.snapshot.paramMap.get('id');

@@ -2,14 +2,17 @@ package com.example.Tuition_Class_Management_System.exception;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
@@ -46,6 +49,22 @@ public class GlobalExceptionHandler {
         return build(HttpStatus.UNAUTHORIZED, "Invalid username or password", null);
     }
 
+    /** Correct password, but the account is a self-registration an admin hasn't approved yet. */
+    @ExceptionHandler(DisabledException.class)
+    public ResponseEntity<ApiErrorResponse> handleDisabled(DisabledException ex) {
+        return build(HttpStatus.FORBIDDEN, "Your account is pending admin approval", null);
+    }
+
+    /**
+     * A unique/foreign-key constraint the service-level checks didn't catch,
+     * e.g. two people registering the same username at the same moment.
+     */
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ApiErrorResponse> handleDataIntegrity(DataIntegrityViolationException ex) {
+        log.warn("Data integrity violation: {}", ex.getMostSpecificCause().getMessage());
+        return build(HttpStatus.CONFLICT, "This request conflicts with existing data", null);
+    }
+
     @ExceptionHandler(AuthenticationException.class)
     public ResponseEntity<ApiErrorResponse> handleAuthentication(AuthenticationException ex) {
         return build(HttpStatus.UNAUTHORIZED, "Full authentication is required to access this resource", null);
@@ -73,6 +92,16 @@ public class GlobalExceptionHandler {
                         (a, b) -> a
                 ));
         return build(HttpStatus.BAD_REQUEST, "Validation failed", fieldErrors);
+    }
+
+    /**
+     * No controller mapped to this URL (e.g. a typo, or the server is running an
+     * older build that doesn't have the endpoint yet). Without this it would fall
+     * through to the generic handler and look like a 500 server bug.
+     */
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ResponseEntity<ApiErrorResponse> handleNoResource(NoResourceFoundException ex) {
+        return build(HttpStatus.NOT_FOUND, "No endpoint found for " + ex.getHttpMethod() + " /" + ex.getResourcePath(), null);
     }
 
     @ExceptionHandler(Exception.class)

@@ -57,6 +57,9 @@ export interface ParentResponse {
   phone: string | null;
   address: string | null;
   occupation: string | null;
+  /** false = self-registered and waiting for admin approval. */
+  enabled: boolean;
+  createdAt: string;
 }
 
 // --- Student ---

@@ -54,7 +54,8 @@ public class JwtUtil {
     public boolean isTokenValid(String token, UserDetails userDetails) {
         try {
             String username = getUsernameFromToken(token);
-            return username.equals(userDetails.getUsername()) && !isExpired(token);
+            // isEnabled(): a disabled/unapproved account must not keep using an old token.
+            return username.equals(userDetails.getUsername()) && userDetails.isEnabled() && !isExpired(token);
         } catch (ExpiredJwtException e) {
             return false;
         }

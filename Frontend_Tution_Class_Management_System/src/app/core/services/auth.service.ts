@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
-import { LoginRequest, LoginResponse, UserResponse } from '../models/auth.models';
+import { LoginRequest, LoginResponse, RegisterRequest, RegisterResponse, UserResponse } from '../models/auth.models';
 
 const TOKEN_KEY = 'tcms_token';
 const USER_KEY = 'tcms_user';
@@ -23,6 +23,14 @@ export class AuthService {
     return this.http.post<LoginResponse>(`${environment.apiBaseUrl}/auth/login`, request).pipe(
       tap(response => this.setSession(response))
     );
+  }
+
+  /**
+   * Parent self-registration. The new account is pending admin approval, so the
+   * response carries no token and we deliberately do NOT call setSession().
+   */
+  register(request: RegisterRequest): Observable<RegisterResponse> {
+    return this.http.post<RegisterResponse>(`${environment.apiBaseUrl}/auth/register`, request);
   }
 
   logout(): void {

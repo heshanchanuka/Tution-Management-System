@@ -23,8 +23,15 @@ export class AuthInterceptor implements HttpInterceptor {
       ? req.clone({ setHeaders: { Authorization: `Bearer ${token}` } })
       : req;
 
+    // Login/register failures (401 bad credentials, 403 pending approval, 400/409
+    // validation) are handled by those pages themselves - don't redirect away.
+    const isAuthEndpoint = req.url.includes('/auth/');
+
     return next.handle(authReq).pipe(
       catchError((error: HttpErrorResponse) => {
+        if (isAuthEndpoint) {
+          return throwError(() => error);
+        }
         if (error.status === 401) {
           this.authService.logout();
           this.router.navigate(['/login']);
