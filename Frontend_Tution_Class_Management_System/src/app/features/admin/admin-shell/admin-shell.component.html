@@ -8,7 +8,11 @@
         <a class="nav-link" routerLink="teachers" routerLinkActive="active">Teachers</a>
       </li>
       <li class="nav-item">
-        <a class="nav-link" routerLink="parents" routerLinkActive="active">Parents</a>
+        <a class="nav-link" routerLink="parents" routerLinkActive="active">
+          Parents
+          <span class="badge rounded-pill bg-warning text-dark ms-1" *ngIf="(pendingCount$ | async) as count"
+                title="{{ count }} registration(s) waiting for approval">{{ count }}</span>
+        </a>
       </li>
       <li class="nav-item">
         <a class="nav-link" routerLink="students" routerLinkActive="active">Students</a>

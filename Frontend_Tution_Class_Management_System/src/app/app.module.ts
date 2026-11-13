@@ -14,6 +14,7 @@ import { NotFoundComponent } from './shared/components/not-found/not-found.compo
 
 import { HomeComponent } from './features/home/home.component';
 import { LoginComponent } from './features/auth/login/login.component';
+import { RegisterComponent } from './features/auth/register/register.component';
 
 import { AuthInterceptor } from './core/interceptors/auth.interceptor';
 
@@ -24,7 +25,8 @@ import { AuthInterceptor } from './core/interceptors/auth.interceptor';
     ForbiddenComponent,
     NotFoundComponent,
     HomeComponent,
-    LoginComponent
+    LoginComponent,
+    RegisterComponent
   ],
   imports: [
     BrowserModule,

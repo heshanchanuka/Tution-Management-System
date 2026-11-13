@@ -38,6 +38,10 @@
         <span *ngIf="submitting" class="spinner-border spinner-border-sm me-2"></span>
         {{ submitting ? 'Signing in…' : 'Sign in' }}
       </button>
+
+      <p class="small text-center mt-3 mb-0">
+        Don't have an account? <a routerLink="/register">Register</a>
+      </p>
     </form>
   </div>
 </div>
