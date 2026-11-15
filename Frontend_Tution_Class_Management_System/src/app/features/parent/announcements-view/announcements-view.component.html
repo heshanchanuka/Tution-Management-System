@@ -1,21 +1,31 @@
-<div class="container-fluid px-4 py-4" style="max-width: 680px;">
-  <h3 class="fw-bold mb-4">Announcements</h3>
+<app-page-header title="Announcements" subtitle="News and updates from the institute."></app-page-header>
 
-  <div class="card border-0 shadow-sm mb-3" *ngFor="let announcement of announcements">
-    <div class="card-body">
-      <div class="d-flex justify-content-between align-items-start mb-2">
-        <h5 class="fw-semibold mb-0">{{ announcement.title }}</h5>
-        <span class="badge bg-secondary" *ngIf="!announcement.targetClassId">Everyone</span>
-        <span class="badge bg-info" *ngIf="announcement.targetClassId">{{ announcement.targetClassSubject }}</span>
+<div class="nav-segmented mb-3" *ngIf="!loading && announcements.length > 0">
+  <button type="button" class="nav-link" [class.active]="filter === 'all'" (click)="filter = 'all'">All <span class="text-muted">{{ announcements.length }}</span></button>
+  <button type="button" class="nav-link" [class.active]="filter === 'class'" (click)="filter = 'class'">For my children's classes</button>
+  <button type="button" class="nav-link" [class.active]="filter === 'everyone'" (click)="filter = 'everyone'">Institute-wide</button>
+</div>
+
+<div class="card table-card" style="max-width: 860px">
+  <app-skeleton-list *ngIf="loading" [rows]="4"></app-skeleton-list>
+  <app-empty-state *ngIf="!loading && visible.length === 0" icon="megaphone" tone="violet" title="No announcements right now"
+                   message="When the institute posts an update, you'll see it here."></app-empty-state>
+
+  <article class="feed-item fade-in" *ngFor="let a of visible">
+    <span class="icon-tile" [ngClass]="a.targetClassId ? 'tone-info' : 'tone-violet'">
+      <i class="bi" [ngClass]="a.targetClassId ? 'bi-journal-text' : 'bi-megaphone'"></i>
+    </span>
+    <div class="flex-grow-1 min-w-0">
+      <div class="d-flex align-items-center gap-2 flex-wrap mb-1">
+        <span class="feed-title mb-0">{{ a.title }}</span>
+        <span class="badge-soft tone-success" *ngIf="isNew(a)"><span class="dot"></span>New</span>
       </div>
-      <p class="mb-2">{{ announcement.message }}</p>
-      <p class="text-muted small mb-0">
-        Posted by {{ announcement.postedByName }} · {{ announcement.postedAt | date:'medium' }}
-      </p>
+      <div class="feed-body">{{ a.message }}</div>
+      <div class="feed-meta">
+        <span class="badge-soft" [ngClass]="a.targetClassId ? 'tone-info' : 'tone-violet'">{{ a.targetClassId ? a.targetClassSubject : 'Everyone' }}</span>
+        <span><i class="bi bi-person me-1"></i>{{ a.postedByName }}</span>
+        <span [title]="a.postedAt | date:'medium'"><i class="bi bi-clock me-1"></i>{{ a.postedAt | timeAgo }}</span>
+      </div>
     </div>
-  </div>
-
-  <div class="alert alert-info" *ngIf="!loading && announcements.length === 0">
-    No announcements right now.
-  </div>
+  </article>
 </div>

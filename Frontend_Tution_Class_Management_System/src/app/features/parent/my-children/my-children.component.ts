@@ -5,8 +5,7 @@ import { ToastrService } from 'ngx-toastr';
 
 @Component({
   selector: 'app-my-children',
-  templateUrl: './my-children.component.html',
-  styleUrls: ['./my-children.component.scss']
+  templateUrl: './my-children.component.html'
 })
 export class MyChildrenComponent implements OnInit {
 
@@ -19,7 +18,7 @@ export class MyChildrenComponent implements OnInit {
   ngOnInit(): void {
     this.parentPortalService.myChildren().subscribe({
       next: (children) => {
-        this.children = children;
+        this.children = children.sort((a, b) => a.fullName.localeCompare(b.fullName));
         this.loading = false;
       },
       error: () => {

@@ -1,0 +1,71 @@
+// Bootstrap overrides - the brand palette and base shape of every component.
+// Loaded before Bootstrap's own variables so its components compile with these values.
+
+$primary:   #4f46e5;
+$secondary: #64748b;
+$success:   #16a34a;
+$info:      #0ea5e9;
+$warning:   #f59e0b;
+$danger:    #dc2626;
+$light:     #f1f5f9;
+$dark:      #0f172a;
+
+$font-family-sans-serif: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+$font-size-base: .9375rem;
+$headings-font-weight: 700;
+$headings-color: null;
+$line-height-base: 1.55;
+
+$body-bg: #f5f6fa;
+$body-color: #0f172a;
+$body-secondary-color: #64748b;
+$body-tertiary-bg: #f8fafc;
+$border-color: #e6e8ef;
+
+// Dark mode (data-bs-theme="dark")
+$body-bg-dark: #0b1120;
+$body-color-dark: #e2e8f0;
+$body-secondary-color-dark: #94a3b8;
+$body-tertiary-bg-dark: #111a2e;
+$border-color-dark: #1f2a44;
+
+$link-decoration: none;
+$link-hover-decoration: underline;
+
+$border-radius:    .625rem;
+$border-radius-sm: .5rem;
+$border-radius-lg: .875rem;
+$border-radius-xl: 1.25rem;
+
+$enable-shadows: false;
+$enable-negative-margins: true;
+
+$input-btn-padding-y: .55rem;
+$input-btn-padding-x: .95rem;
+$input-btn-padding-y-sm: .35rem;
+$input-btn-padding-x-sm: .7rem;
+$input-btn-focus-width: .2rem;
+$input-btn-focus-color-opacity: .18;
+$btn-font-weight: 500;
+$form-label-font-weight: 500;
+$form-label-margin-bottom: .4rem;
+$input-placeholder-color: #94a3b8;
+
+$card-border-color: $border-color;
+$card-cap-bg: transparent;
+$card-spacer-y: 1.25rem;
+$card-spacer-x: 1.25rem;
+
+$table-cell-padding-y: .8rem;
+$table-cell-padding-x: 1rem;
+$table-cell-padding-y-sm: .5rem;
+$table-cell-padding-x-sm: .75rem;
+$table-th-font-weight: 600;
+
+$badge-font-weight: 600;
+$badge-padding-y: .4em;
+$badge-padding-x: .7em;
+
+$nav-pills-border-radius: .5rem;
+$progress-height: .5rem;
+$progress-border-radius: 50rem;

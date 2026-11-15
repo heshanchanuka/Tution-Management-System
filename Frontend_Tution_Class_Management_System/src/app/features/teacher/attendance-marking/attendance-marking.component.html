@@ -1,52 +1,82 @@
-<div class="container-fluid px-4 py-4" style="max-width: 680px;">
-  <a routerLink="/teacher/classes" class="text-decoration-none small">‹ Back to My Classes</a>
+<app-class-header [classId]="classId" [schoolClass]="schoolClass"></app-class-header>
 
-  <div class="d-flex justify-content-between align-items-center mt-2 mb-4">
-    <h3 class="fw-bold mb-0" *ngIf="schoolClass">{{ schoolClass.subject }} — {{ schoolClass.gradeLevel }} Attendance</h3>
-    <a *ngIf="schoolClass" [routerLink]="['/teacher/classes', classId, 'attendance', 'history']" class="small">View history ›</a>
-  </div>
+<!-- Date + summary -->
+<div class="card mb-3">
+  <div class="card-body d-flex flex-wrap align-items-end gap-3">
+    <div>
+      <label class="form-label" for="session-date">Session date</label>
+      <div class="input-group" style="max-width: 280px">
+        <button type="button" class="btn btn-white" (click)="shiftDate(-7)" title="Previous week" aria-label="Previous week"><i class="bi bi-chevron-double-left"></i></button>
+        <input id="session-date" type="date" class="form-control" [max]="today" [ngModel]="selectedDate" (ngModelChange)="onDateChange($event)" />
+        <button type="button" class="btn btn-white" (click)="shiftDate(7)" [disabled]="selectedDate >= today" title="Next week" aria-label="Next week"><i class="bi bi-chevron-double-right"></i></button>
+      </div>
+    </div>
 
-  <div class="mb-3" style="max-width: 220px;">
-    <label class="form-label">Session Date</label>
-    <input type="date" class="form-control" [(ngModel)]="selectedDate" (change)="onDateChange()" />
-  </div>
+    <div class="d-flex gap-2 flex-wrap ms-lg-3">
+      <span class="badge-soft tone-success fs-6 px-3 py-2"><i class="bi bi-check-lg"></i>{{ counts.PRESENT }} present</span>
+      <span class="badge-soft tone-warning fs-6 px-3 py-2"><i class="bi bi-clock"></i>{{ counts.LATE }} late</span>
+      <span class="badge-soft tone-danger fs-6 px-3 py-2"><i class="bi bi-x-lg"></i>{{ counts.ABSENT }} absent</span>
+    </div>
 
-  <div class="card border-0 shadow-sm" *ngIf="!loading">
-    <div class="table-responsive">
-      <table class="table mb-0 align-middle">
-        <thead class="table-light">
-          <tr>
-            <th>Student</th>
-            <th>Grade</th>
-            <th style="width: 260px;">Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let row of rows">
-            <td>{{ row.student.fullName }}</td>
-            <td>{{ row.student.gradeLevel }}</td>
-            <td>
-              <div class="btn-group btn-group-sm" role="group">
-                <input type="radio" class="btn-check" [id]="'present-' + row.student.id" [value]="'PRESENT'" [(ngModel)]="row.status" [name]="'status-' + row.student.id" />
-                <label class="btn btn-outline-success" [for]="'present-' + row.student.id">Present</label>
-
-                <input type="radio" class="btn-check" [id]="'late-' + row.student.id" [value]="'LATE'" [(ngModel)]="row.status" [name]="'status-' + row.student.id" />
-                <label class="btn btn-outline-warning" [for]="'late-' + row.student.id">Late</label>
-
-                <input type="radio" class="btn-check" [id]="'absent-' + row.student.id" [value]="'ABSENT'" [(ngModel)]="row.status" [name]="'status-' + row.student.id" />
-                <label class="btn btn-outline-danger" [for]="'absent-' + row.student.id">Absent</label>
-              </div>
-            </td>
-          </tr>
-          <tr *ngIf="rows.length === 0">
-            <td colspan="3" class="text-center text-muted py-4">No students enrolled in this class yet.</td>
-          </tr>
-        </tbody>
-      </table>
+    <div class="ms-auto d-flex gap-2 flex-wrap" *ngIf="rows.length > 0">
+      <button type="button" class="btn btn-sm btn-soft-success" (click)="markAll('PRESENT')"><i class="bi bi-check2-all"></i> All present</button>
+      <button type="button" class="btn btn-sm btn-soft-danger" (click)="markAll('ABSENT')"><i class="bi bi-x-circle"></i> All absent</button>
     </div>
   </div>
+</div>
 
-  <button type="button" class="btn btn-primary mt-3" [disabled]="saving || rows.length === 0" (click)="save()">
-    {{ saving ? 'Saving…' : 'Save Attendance' }}
+<div class="callout callout-primary mb-3" *ngIf="!loading && alreadyRecorded">
+  <i class="bi bi-info-circle fs-5"></i>
+  <p class="callout-text">Attendance for <strong>{{ selectedDate | date:'EEEE, d MMM y' }}</strong> was already saved. You're editing it - save again to update.</p>
+</div>
+<div class="callout callout-warning mb-3" *ngIf="!loading && offScheduleDay && schoolClass">
+  <i class="bi bi-calendar-x fs-5"></i>
+  <p class="callout-text">This class normally meets on {{ schoolClass.dayOfWeek | humanize }}s. Make sure you picked the right date.</p>
+</div>
+
+<div class="card table-card">
+  <app-skeleton-list *ngIf="loading" [rows]="6"></app-skeleton-list>
+
+  <app-empty-state *ngIf="!loading && loadError" icon="wifi-off" tone="danger" title="Couldn't load the roster" message="Check your connection and try again.">
+    <button type="button" class="btn btn-white" (click)="loadRoster()"><i class="bi bi-arrow-clockwise"></i> Retry</button>
+  </app-empty-state>
+
+  <app-empty-state *ngIf="!loading && !loadError && rows.length === 0" icon="people"
+                   title="No students enrolled yet" message="There's no one to mark. The institute enrols students into classes."></app-empty-state>
+
+  <ul class="list-unstyled mb-0" *ngIf="!loading && !loadError && rows.length > 0">
+    <li *ngFor="let row of rows; let i = index" class="d-flex flex-wrap align-items-center gap-3 px-3 px-md-4 py-3 border-bottom">
+      <span class="text-muted small tabular-nums" style="width: 1.5rem">{{ i + 1 }}</span>
+      <div class="entity flex-grow-1">
+        <app-avatar [name]="row.student.fullName"></app-avatar>
+        <div class="min-w-0">
+          <div class="entity-name">{{ row.student.fullName }}</div>
+          <div class="entity-meta">{{ row.student.gradeLevel }}</div>
+        </div>
+      </div>
+      <div class="status-toggle" role="radiogroup" [attr.aria-label]="'Attendance for ' + row.student.fullName">
+        <button *ngFor="let s of statuses" type="button" role="radio" [attr.aria-checked]="row.status === s.value"
+                [ngClass]="row.status === s.value ? s.css : ''" (click)="setStatus(row, s.value)">
+          <i class="bi" [ngClass]="'bi-' + s.icon"></i><span class="d-none d-sm-inline">{{ s.label }}</span>
+        </button>
+      </div>
+    </li>
+  </ul>
+</div>
+
+<div class="sticky-actions" *ngIf="!loading && rows.length > 0">
+  <div class="small">
+    <ng-container *ngIf="isDirty; else saved">
+      <span class="text-tone-warning fw-semibold"><i class="bi bi-circle-fill me-1" style="font-size: .5rem; vertical-align: middle"></i>Unsaved changes</span>
+      <span class="text-muted d-none d-sm-inline"> · {{ rows.length }} students</span>
+    </ng-container>
+    <ng-template #saved>
+      <span class="text-tone-success fw-semibold"><i class="bi bi-check-circle me-1"></i>All changes saved</span>
+    </ng-template>
+  </div>
+  <button type="button" class="btn btn-primary" [disabled]="saving || (!isDirty && alreadyRecorded)" (click)="save()">
+    <span *ngIf="saving" class="spinner-border spinner-border-sm"></span>
+    <i *ngIf="!saving" class="bi bi-cloud-check"></i>
+    {{ saving ? 'Saving…' : alreadyRecorded ? 'Update attendance' : 'Save attendance' }}
   </button>
 </div>

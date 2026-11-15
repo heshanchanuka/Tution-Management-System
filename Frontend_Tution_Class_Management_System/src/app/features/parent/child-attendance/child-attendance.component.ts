@@ -1,66 +1,101 @@
 import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
-import { ToastrService } from 'ngx-toastr';
+import { ActivatedRoute, ParamMap } from '@angular/router';
 import { ParentPortalService } from '../../../core/services/parent-portal.service';
 import { StudentResponse } from '../../../core/models/admin.models';
 import { AttendanceResponse } from '../../../core/models/teacher-portal.models';
-
-function isoDaysAgo(days: number): string {
-  const d = new Date();
-  d.setDate(d.getDate() - days);
-  return d.toISOString().slice(0, 10);
-}
+import { daysAgoIso, todayIso } from '../../../core/utils/date.utils';
 
 @Component({
   selector: 'app-child-attendance',
-  templateUrl: './child-attendance.component.html',
-  styleUrls: ['./child-attendance.component.scss']
+  templateUrl: './child-attendance.component.html'
 })
 export class ChildAttendanceComponent implements OnInit {
 
   studentId!: number;
   child: StudentResponse | null = null;
   records: AttendanceResponse[] = [];
-  from: string = isoDaysAgo(90);
-  to: string = isoDaysAgo(0);
+  from: string = daysAgoIso(90);
+  to: string = todayIso();
+  readonly today = todayIso();
   loading = true;
+  loadError = false;
+  subjectFilter = '';
 
-  constructor(
-    private route: ActivatedRoute,
-    private parentPortalService: ParentPortalService,
-    private toastr: ToastrService
-  ) {
+  readonly presets = [
+    { label: '30 days', days: 30 },
+    { label: '90 days', days: 90 },
+    { label: '1 year', days: 365 }
+  ];
+
+  constructor(private route: ActivatedRoute, private parentPortalService: ParentPortalService) {
   }
 
   ngOnInit(): void {
-    this.studentId = Number(this.route.snapshot.paramMap.get('id'));
-    this.parentPortalService.getChild(this.studentId).subscribe((child) => (this.child = child));
-    this.load();
-  }
-
-  load(): void {
-    this.loading = true;
-    this.parentPortalService.attendance(this.studentId, this.from, this.to).subscribe({
-      next: (records) => {
-        this.records = records.sort((a, b) => b.date.localeCompare(a.date));
-        this.loading = false;
-      },
-      error: (err) => {
-        this.loading = false;
-        this.toastr.error(err?.error?.message ?? 'Could not load attendance');
-      }
+    // Re-load when switching between children without leaving the page.
+    this.route.paramMap.subscribe((params: ParamMap) => {
+      this.studentId = Number(params.get('id'));
+      this.child = null;
+      this.parentPortalService.getChild(this.studentId).subscribe((child) => (this.child = child));
+      this.load();
     });
   }
 
-  get presentCount(): number {
-    return this.records.filter((r) => r.status === 'PRESENT').length;
+  get subjects(): string[] {
+    return [...new Set(this.records.map((r) => r.subject))].sort();
   }
 
-  get absentCount(): number {
-    return this.records.filter((r) => r.status === 'ABSENT').length;
+  get visible(): AttendanceResponse[] {
+    return this.subjectFilter ? this.records.filter((r) => r.subject === this.subjectFilter) : this.records;
+  }
+
+  get presentCount(): number {
+    return this.visible.filter((r) => r.status === 'PRESENT').length;
   }
 
   get lateCount(): number {
-    return this.records.filter((r) => r.status === 'LATE').length;
+    return this.visible.filter((r) => r.status === 'LATE').length;
+  }
+
+  get absentCount(): number {
+    return this.visible.filter((r) => r.status === 'ABSENT').length;
+  }
+
+  get rate(): number {
+    return this.visible.length ? ((this.presentCount + this.lateCount) / this.visible.length) * 100 : 0;
+  }
+
+  get rateColor(): string {
+    return this.rate >= 85 ? '#22c55e' : this.rate >= 70 ? '#f59e0b' : '#ef4444';
+  }
+
+  applyPreset(days: number): void {
+    this.from = daysAgoIso(days);
+    this.to = todayIso();
+    this.load();
+  }
+
+  isPreset(days: number): boolean {
+    return this.from === daysAgoIso(days) && this.to === todayIso();
+  }
+
+  load(): void {
+    if (this.from > this.to) {
+      return;
+    }
+    this.loading = true;
+    this.loadError = false;
+    this.parentPortalService.attendance(this.studentId, this.from, this.to).subscribe({
+      next: (records) => {
+        this.records = records.sort((a, b) => b.date.localeCompare(a.date));
+        if (this.subjectFilter && !this.subjects.includes(this.subjectFilter)) {
+          this.subjectFilter = '';
+        }
+        this.loading = false;
+      },
+      error: () => {
+        this.loading = false;
+        this.loadError = true;
+      }
+    });
   }
 }

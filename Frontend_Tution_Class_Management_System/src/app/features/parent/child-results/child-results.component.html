@@ -1,42 +1,93 @@
-<div class="container-fluid px-4 py-4" style="max-width: 680px;">
-  <a routerLink="/parent/children" class="text-decoration-none small">‹ Back to My Children</a>
+<app-child-header [childId]="studentId" [child]="child">
+  <button type="button" class="btn btn-primary" [disabled]="downloadingReportCard || results.length === 0" (click)="downloadReportCard()">
+    <span *ngIf="downloadingReportCard" class="spinner-border spinner-border-sm"></span>
+    <i *ngIf="!downloadingReportCard" class="bi bi-file-earmark-pdf"></i>
+    {{ downloadingReportCard ? 'Preparing…' : 'Report card' }}
+  </button>
+</app-child-header>
 
-  <div class="d-flex justify-content-between align-items-center mt-2 mb-4">
-    <h3 class="fw-bold mb-0" *ngIf="child">{{ child.fullName }} — Exam Results</h3>
-    <button type="button" class="btn btn-outline-primary btn-sm" [disabled]="downloadingReportCard" (click)="downloadReportCard()">
-      {{ downloadingReportCard ? 'Preparing…' : 'Download Report Card' }}
-    </button>
-  </div>
+<app-empty-state *ngIf="!loading && loadError" icon="wifi-off" tone="danger" title="Couldn't load results" message="Check your connection and try again.">
+  <button type="button" class="btn btn-white" (click)="load()"><i class="bi bi-arrow-clockwise"></i> Retry</button>
+</app-empty-state>
 
-  <div class="card border-0 shadow-sm">
-    <div class="table-responsive">
-      <table class="table mb-0 align-middle">
-        <thead class="table-light">
-          <tr>
-            <th>Subject</th>
-            <th>Exam</th>
-            <th>Date</th>
-            <th>Marks</th>
-            <th>Grade</th>
-            <th>Remarks</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let result of results">
-            <td>{{ result.subject }}</td>
-            <td>{{ result.examName }}</td>
-            <td>{{ result.examDate }}</td>
-            <td>{{ result.marksObtained }} / {{ result.maxMarks }}</td>
-            <td>
-              <span class="badge bg-primary">{{ result.grade }}</span>
-            </td>
-            <td class="text-muted small">{{ result.remarks || '—' }}</td>
-          </tr>
-          <tr *ngIf="!loading && results.length === 0">
-            <td colspan="6" class="text-center text-muted py-4">No exam results recorded yet.</td>
-          </tr>
-        </tbody>
-      </table>
+<ng-container *ngIf="!loadError">
+  <div class="row g-3 mb-3">
+    <div class="col-sm-4">
+      <app-stat-card label="Average score" icon="graph-up" [tone]="$any(tone(overallAverage))"
+                     [value]="results.length ? (overallAverage | number:'1.0-1') + '%' : '—'" [loading]="loading"></app-stat-card>
+    </div>
+    <div class="col-sm-4">
+      <app-stat-card label="Exams taken" icon="journal-check" tone="primary" [value]="results.length" [loading]="loading"></app-stat-card>
+    </div>
+    <div class="col-sm-4">
+      <app-stat-card label="Strongest subject" icon="trophy" tone="warning" [value]="bestSubject?.subject ?? '—'"
+                     [hint]="bestSubject ? (bestSubject.average | number:'1.0-0') + '% average' : null" [loading]="loading"></app-stat-card>
     </div>
   </div>
-</div>
+
+  <div class="row g-3">
+    <!-- By subject -->
+    <div class="col-lg-4" *ngIf="!loading && subjectSummaries.length > 0">
+      <div class="card h-100">
+        <div class="card-header"><h2 class="card-title">By subject</h2></div>
+        <div class="card-body">
+          <button *ngFor="let s of subjectSummaries" type="button" class="w-100 border-0 bg-transparent text-start p-0 mb-3"
+                  style="color: inherit" (click)="subjectFilter = subjectFilter === s.subject ? '' : s.subject">
+            <div class="d-flex justify-content-between small mb-1">
+              <span class="fw-medium" [class.text-tone-primary]="subjectFilter === s.subject">{{ s.subject }}</span>
+              <span class="text-muted tabular-nums">{{ s.average | number:'1.0-0' }}%</span>
+            </div>
+            <div class="progress" style="height: .45rem">
+              <div class="progress-bar" [ngClass]="'bg-' + (tone(s.average) === 'info' ? 'info' : tone(s.average))" [style.width.%]="s.average"></div>
+            </div>
+          </button>
+          <div class="small text-muted" *ngIf="subjectFilter">
+            Showing {{ subjectFilter }} only · <a href="" (click)="$event.preventDefault(); subjectFilter = ''">show all</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Results -->
+    <div [ngClass]="!loading && subjectSummaries.length > 0 ? 'col-lg-8' : 'col-12'">
+      <div class="card table-card">
+        <app-skeleton-list *ngIf="loading" [rows]="5" [avatar]="false"></app-skeleton-list>
+        <app-empty-state *ngIf="!loading && results.length === 0" icon="journal-x" title="No exam results yet"
+                         message="Results appear here once teachers enter marks."></app-empty-state>
+
+        <div class="table-responsive" *ngIf="!loading && results.length > 0">
+          <table class="table align-middle">
+            <thead>
+              <tr>
+                <th>Exam</th>
+                <th class="text-end">Marks</th>
+                <th class="text-center">Grade</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let r of visible">
+                <td>
+                  <div class="fw-semibold">{{ r.examName }}</div>
+                  <div class="small text-muted">{{ r.subject }} · {{ r.examDate | date:'d MMM y' }}</div>
+                  <div class="small mt-1" *ngIf="r.remarks"><i class="bi bi-chat-left-quote me-1 text-muted"></i>{{ r.remarks }}</div>
+                </td>
+                <td class="text-end" style="min-width: 150px">
+                  <div class="fw-semibold tabular-nums">{{ r.marksObtained }} <span class="text-muted fw-normal">/ {{ r.maxMarks }}</span></div>
+                  <div class="meter justify-content-end mt-1">
+                    <div class="progress" style="max-width: 90px">
+                      <div class="progress-bar" [ngClass]="'bg-' + tone(percent(r))" [style.width.%]="percent(r)"></div>
+                    </div>
+                    <span class="meter-label">{{ percent(r) | number:'1.0-0' }}%</span>
+                  </div>
+                </td>
+                <td class="text-center">
+                  <span class="grade-chip" [ngClass]="'tone-' + tone(percent(r))">{{ r.grade }}</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</ng-container>

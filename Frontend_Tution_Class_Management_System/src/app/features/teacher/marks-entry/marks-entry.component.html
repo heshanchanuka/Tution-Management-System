@@ -1,104 +1,166 @@
-<div class="container-fluid px-4 py-4" style="max-width: 720px;">
-  <a routerLink="/teacher/classes" class="text-decoration-none small">‹ Back to My Classes</a>
+<app-class-header [classId]="classId" [schoolClass]="schoolClass">
+  <button *ngIf="!selectedExam" type="button" class="btn btn-primary" (click)="showNewExamForm = !showNewExamForm">
+    <i class="bi" [ngClass]="showNewExamForm ? 'bi-x-lg' : 'bi-plus-lg'"></i> {{ showNewExamForm ? 'Cancel' : 'New exam' }}
+  </button>
+</app-class-header>
 
-  <h3 class="fw-bold mt-2 mb-4" *ngIf="schoolClass">{{ schoolClass.subject }} — {{ schoolClass.gradeLevel }} Marks</h3>
-
-  <!-- Exam list view -->
-  <ng-container *ngIf="!selectedExam">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-      <h6 class="fw-semibold mb-0">Exams</h6>
-      <button type="button" class="btn btn-primary btn-sm" (click)="showNewExamForm = !showNewExamForm">
-        {{ showNewExamForm ? 'Cancel' : '+ New Exam' }}
+<!-- ======================================================= Exam list -->
+<ng-container *ngIf="!selectedExam">
+  <form class="card mb-3 fade-in" *ngIf="showNewExamForm" [formGroup]="examForm" (ngSubmit)="createExam()" novalidate>
+    <div class="card-header d-flex align-items-center gap-2">
+      <span class="icon-tile icon-tile-sm tone-primary"><i class="bi bi-journal-plus"></i></span>
+      <h2 class="card-title">Create an exam</h2>
+    </div>
+    <div class="card-body">
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label class="form-label required" for="examName">Exam name</label>
+          <input id="examName" type="text" formControlName="name" class="form-control" placeholder="e.g. Term 1 test"
+                 [class.is-invalid]="examForm.get('name')?.invalid && examForm.get('name')?.touched" />
+          <div class="invalid-feedback">Give the exam a name.</div>
+        </div>
+        <div class="col-6 col-md-3">
+          <label class="form-label required" for="examDate">Date</label>
+          <input id="examDate" type="date" formControlName="examDate" class="form-control" />
+        </div>
+        <div class="col-6 col-md-3">
+          <label class="form-label required" for="maxMarks">Out of</label>
+          <input id="maxMarks" type="number" min="1" formControlName="maxMarks" class="form-control"
+                 [class.is-invalid]="examForm.get('maxMarks')?.invalid && examForm.get('maxMarks')?.touched" />
+          <div class="invalid-feedback">At least 1.</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-footer d-flex justify-content-end gap-2" style="background: var(--app-surface-2)">
+      <button type="button" class="btn btn-white" (click)="showNewExamForm = false">Cancel</button>
+      <button type="submit" class="btn btn-primary" [disabled]="creatingExam">
+        <span *ngIf="creatingExam" class="spinner-border spinner-border-sm"></span> Create &amp; enter marks
       </button>
     </div>
+  </form>
 
-    <div class="card border-0 shadow-sm mb-4" *ngIf="showNewExamForm">
-      <div class="card-body">
-        <form [formGroup]="examForm" (ngSubmit)="createExam()" novalidate>
-          <div class="row g-2">
-            <div class="col-md-5">
-              <label class="form-label">Exam Name</label>
-              <input type="text" formControlName="name" class="form-control" placeholder="e.g. Term 1 2026" />
-            </div>
-            <div class="col-md-3">
-              <label class="form-label">Date</label>
-              <input type="date" formControlName="examDate" class="form-control" />
-            </div>
-            <div class="col-md-2">
-              <label class="form-label">Max Marks</label>
-              <input type="number" formControlName="maxMarks" class="form-control" />
-            </div>
-            <div class="col-md-2 d-flex align-items-end">
-              <button type="submit" class="btn btn-success w-100" [disabled]="creatingExam">Create</button>
-            </div>
+  <div class="row g-3" *ngIf="loadingExams">
+    <div class="col-md-6 col-xl-4" *ngFor="let i of [1, 2, 3]">
+      <div class="item-card"><span class="skeleton mb-2" style="height: 1rem; width: 60%"></span><span class="skeleton" style="height: .8rem; width: 40%"></span></div>
+    </div>
+  </div>
+
+  <div class="card" *ngIf="!loadingExams && exams.length === 0 && !showNewExamForm">
+    <app-empty-state icon="journal-plus" title="No exams yet" message="Create an exam to start entering marks for this class.">
+      <button type="button" class="btn btn-primary" (click)="showNewExamForm = true"><i class="bi bi-plus-lg"></i> New exam</button>
+    </app-empty-state>
+  </div>
+
+  <div class="row g-3" *ngIf="!loadingExams && exams.length > 0">
+    <div class="col-md-6 col-xl-4" *ngFor="let exam of exams">
+      <button type="button" class="item-card w-100 text-start" style="color: inherit" (click)="openExam(exam)">
+        <div class="d-flex align-items-start gap-3">
+          <span class="icon-tile tone-violet"><i class="bi bi-journal-check"></i></span>
+          <div class="min-w-0 flex-grow-1">
+            <div class="fw-bold text-truncate">{{ exam.name }}</div>
+            <div class="small text-muted">{{ exam.examDate | date:'d MMM y' }} · out of {{ exam.maxMarks }}</div>
           </div>
-        </form>
+          <i class="bi bi-chevron-right text-muted"></i>
+        </div>
+        <div class="item-card-footer">
+          <span class="small fw-medium text-tone-primary"><i class="bi bi-pencil-square me-1"></i>Enter or edit marks</span>
+        </div>
+      </button>
+    </div>
+  </div>
+</ng-container>
+
+<!-- ======================================================= Marks grid -->
+<ng-container *ngIf="selectedExam">
+  <div class="card mb-3">
+    <div class="card-body d-flex flex-wrap align-items-center gap-3">
+      <button type="button" class="btn btn-white" (click)="closeExam()"><i class="bi bi-arrow-left"></i> All exams</button>
+      <div class="flex-grow-1 min-w-0">
+        <div class="fw-bold fs-5 text-truncate">{{ selectedExam.name }}</div>
+        <div class="small text-muted">{{ selectedExam.examDate | date:'EEEE, d MMM y' }} · out of {{ selectedExam.maxMarks }}</div>
+      </div>
+      <div class="d-flex gap-4">
+        <div>
+          <div class="small text-muted">Entered</div>
+          <div class="fw-semibold tabular-nums">{{ enteredCount }}/{{ rows.length }}</div>
+        </div>
+        <div>
+          <div class="small text-muted">Class average</div>
+          <div class="fw-semibold tabular-nums">{{ average === null ? '—' : (average | number:'1.0-1') + '%' }}</div>
+        </div>
+        <div class="d-none d-md-block">
+          <div class="small text-muted">Top score</div>
+          <div class="fw-semibold text-truncate" style="max-width: 160px">{{ highest ? highest.student.fullName.split(' ')[0] + ' · ' + highest.marksObtained : '—' }}</div>
+        </div>
       </div>
     </div>
+  </div>
 
-    <div class="card border-0 shadow-sm">
-      <div class="table-responsive">
-        <table class="table table-hover mb-0 align-middle">
-          <thead class="table-light">
-            <tr>
-              <th>Exam</th>
-              <th>Date</th>
-              <th>Max Marks</th>
-              <th class="text-end">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let exam of exams">
-              <td>{{ exam.name }}</td>
-              <td>{{ exam.examDate }}</td>
-              <td>{{ exam.maxMarks }}</td>
-              <td class="text-end">
-                <button type="button" class="btn btn-sm btn-outline-primary" (click)="openExam(exam)">Enter Marks</button>
-              </td>
-            </tr>
-            <tr *ngIf="exams.length === 0">
-              <td colspan="4" class="text-center text-muted py-4">No exams yet for this class.</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+  <div class="card table-card">
+    <app-skeleton-list *ngIf="loadingRows" [rows]="6"></app-skeleton-list>
+    <app-empty-state *ngIf="!loadingRows && rows.length === 0" icon="people" title="No students enrolled"
+                     message="There's no one to enter marks for yet."></app-empty-state>
+
+    <div class="table-responsive" *ngIf="!loadingRows && rows.length > 0">
+      <table class="table align-middle">
+        <thead>
+          <tr>
+            <th>Student</th>
+            <th style="width: 150px">Marks</th>
+            <th style="width: 110px" class="d-none d-sm-table-cell">Score</th>
+            <th class="d-none d-md-table-cell">Remarks</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let row of rows; let i = index">
+            <td>
+              <div class="entity">
+                <app-avatar [name]="row.student.fullName" size="sm"></app-avatar>
+                <div class="min-w-0">
+                  <div class="entity-name">{{ row.student.fullName }}</div>
+                  <div class="entity-meta" *ngIf="row.grade">Grade {{ row.grade }}</div>
+                </div>
+              </div>
+            </td>
+            <td>
+              <div class="input-group input-group-sm">
+                <input type="number" class="form-control tabular-nums" data-mark [(ngModel)]="row.marksObtained"
+                       min="0" [max]="selectedExam.maxMarks" step="0.5" placeholder="—"
+                       [class.is-invalid]="isInvalid(row)" [attr.aria-label]="'Marks for ' + row.student.fullName"
+                       (keydown.enter)="focusNext(i, $event)" />
+                <span class="input-group-text">/ {{ selectedExam.maxMarks }}</span>
+              </div>
+            </td>
+            <td class="d-none d-sm-table-cell">
+              <span *ngIf="percent(row) !== null; else noScore" class="badge-soft" [ngClass]="'tone-' + percentTone(percent(row))">
+                {{ percent(row) | number:'1.0-0' }}%
+              </span>
+              <ng-template #noScore>
+                <span class="small" [ngClass]="isInvalid(row) ? 'text-tone-danger' : 'text-muted'">{{ isInvalid(row) ? 'Out of range' : '—' }}</span>
+              </ng-template>
+            </td>
+            <td class="d-none d-md-table-cell">
+              <input type="text" class="form-control form-control-sm" [(ngModel)]="row.remarks" placeholder="Optional note for parents"
+                     [attr.aria-label]="'Remarks for ' + row.student.fullName" />
+            </td>
+          </tr>
+        </tbody>
+      </table>
     </div>
-  </ng-container>
+  </div>
 
-  <!-- Marks entry grid for the selected exam -->
-  <ng-container *ngIf="selectedExam">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-      <h6 class="fw-semibold mb-0">{{ selectedExam.name }} — out of {{ selectedExam.maxMarks }}</h6>
-      <button type="button" class="btn btn-outline-secondary btn-sm" (click)="closeExam()">‹ Back to Exams</button>
+  <div class="sticky-actions" *ngIf="!loadingRows && rows.length > 0">
+    <div class="small">
+      <span *ngIf="invalidCount > 0" class="text-tone-danger fw-semibold"><i class="bi bi-exclamation-circle me-1"></i>{{ invalidCount }} mark{{ invalidCount === 1 ? '' : 's' }} out of range</span>
+      <ng-container *ngIf="invalidCount === 0">
+        <span *ngIf="isDirty" class="text-tone-warning fw-semibold"><i class="bi bi-circle-fill me-1" style="font-size: .5rem; vertical-align: middle"></i>Unsaved changes</span>
+        <span *ngIf="!isDirty" class="text-tone-success fw-semibold"><i class="bi bi-check-circle me-1"></i>All changes saved</span>
+      </ng-container>
+      <span class="text-muted d-none d-md-inline"> · Press Enter to jump to the next student</span>
     </div>
-
-    <div class="card border-0 shadow-sm">
-      <div class="table-responsive">
-        <table class="table mb-0 align-middle">
-          <thead class="table-light">
-            <tr>
-              <th>Student</th>
-              <th style="width: 120px;">Marks</th>
-              <th>Remarks</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let row of rows">
-              <td>{{ row.student.fullName }}</td>
-              <td>
-                <input type="number" class="form-control form-control-sm" [(ngModel)]="row.marksObtained" min="0" [max]="selectedExam.maxMarks" />
-              </td>
-              <td>
-                <input type="text" class="form-control form-control-sm" [(ngModel)]="row.remarks" />
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-    <button type="button" class="btn btn-primary mt-3" [disabled]="savingResults" (click)="saveResults()">
-      {{ savingResults ? 'Saving…' : 'Save Marks' }}
+    <button type="button" class="btn btn-primary" [disabled]="savingResults || !isDirty" (click)="saveResults()">
+      <span *ngIf="savingResults" class="spinner-border spinner-border-sm"></span>
+      <i *ngIf="!savingResults" class="bi bi-cloud-check"></i> {{ savingResults ? 'Saving…' : 'Save marks' }}
     </button>
-  </ng-container>
-</div>
+  </div>
+</ng-container>

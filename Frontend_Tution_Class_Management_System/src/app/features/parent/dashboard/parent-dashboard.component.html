@@ -1,57 +1,99 @@
-<div class="container-fluid px-4 py-4">
-  <h3 class="fw-bold mb-1">Welcome, {{ authService.getUser()?.fullName }}</h3>
-  <p class="text-muted mb-4">Here's a quick look at your children.</p>
+<section class="welcome-banner">
+  <div class="position-relative" style="z-index: 1">
+    <div class="welcome-date">{{ today | date:'EEEE, d MMMM y' }}</div>
+    <h2>{{ greeting }}, {{ firstName }} 👋</h2>
+    <p>Here's how your {{ children.length === 1 ? 'child is' : 'children are' }} doing.</p>
+  </div>
+</section>
 
-  <div class="row g-3 mb-4" *ngIf="stats">
-    <div class="col-md-4 col-6">
-      <div class="card border-0 shadow-sm h-100">
-        <div class="card-body">
-          <div class="text-muted small">Children</div>
-          <div class="fs-3 fw-bold text-primary">{{ stats.totalChildren }}</div>
-        </div>
+<!-- Outstanding fee callout -->
+<div class="callout callout-warning mb-4 fade-in" *ngIf="stats && stats.totalOutstandingBalance > 0">
+  <i class="bi bi-wallet2 fs-4"></i>
+  <div class="flex-grow-1">
+    <div class="callout-title">{{ stats.totalOutstandingBalance | lkr }} in fees outstanding</div>
+    <p class="callout-text">Please settle the balance at the institute office. You'll find each invoice under your child's Fees tab.</p>
+  </div>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-sm-4">
+    <app-stat-card label="Children" icon="people" tone="primary" [value]="stats?.totalChildren ?? '—'"
+                   [loading]="loadingStats" link="/parent/children"></app-stat-card>
+  </div>
+  <div class="col-sm-4">
+    <app-stat-card label="Overall attendance" icon="calendar2-check" tone="success"
+                   [value]="stats ? (stats.overallAttendanceRate | number:'1.0-1') + '%' : '—'" [loading]="loadingStats"></app-stat-card>
+  </div>
+  <div class="col-sm-4">
+    <app-stat-card label="Outstanding fees" icon="wallet2" [tone]="(stats?.totalOutstandingBalance ?? 0) > 0 ? 'danger' : 'success'"
+                   [value]="stats ? (stats.totalOutstandingBalance | lkr:0) : '—'"
+                   [hint]="stats && stats.totalOutstandingBalance === 0 ? 'All paid up' : null" [loading]="loadingStats"></app-stat-card>
+  </div>
+</div>
+
+<div class="row g-3">
+  <div class="col-xl-8">
+    <h2 class="section-title mb-3">Your children</h2>
+
+    <div class="row g-3" *ngIf="loading">
+      <div class="col-md-6" *ngFor="let i of [1, 2]">
+        <div class="item-card"><span class="skeleton mb-3" style="height: 3rem; width: 3rem; border-radius: 50%"></span><span class="skeleton" style="height: 1rem; width: 50%"></span></div>
       </div>
     </div>
-    <div class="col-md-4 col-6">
-      <div class="card border-0 shadow-sm h-100">
-        <div class="card-body">
-          <div class="text-muted small">Outstanding Balance</div>
-          <div class="fs-3 fw-bold" [class.text-danger]="stats.totalOutstandingBalance > 0" [class.text-success]="stats.totalOutstandingBalance === 0">
-            Rs. {{ stats.totalOutstandingBalance | number:'1.2-2' }}
+
+    <div class="card" *ngIf="!loading && children.length === 0">
+      <app-empty-state icon="person-plus" title="No children linked yet"
+                       message="The institute links your children to your account when they're registered. Contact the office if this looks wrong."></app-empty-state>
+    </div>
+
+    <div class="row g-3" *ngIf="!loading && children.length > 0">
+      <div class="col-md-6" *ngFor="let child of children">
+        <div class="item-card">
+          <div class="d-flex align-items-center gap-3 mb-3">
+            <app-avatar [name]="child.fullName" size="lg"></app-avatar>
+            <div class="min-w-0">
+              <div class="fw-bold fs-6 text-truncate">{{ child.fullName }}</div>
+              <div class="small text-muted">{{ child.gradeLevel }}</div>
+            </div>
           </div>
-        </div>
-      </div>
-    </div>
-    <div class="col-md-4 col-6">
-      <div class="card border-0 shadow-sm h-100">
-        <div class="card-body">
-          <div class="text-muted small">Overall Attendance</div>
-          <div class="fs-3 fw-bold text-info">{{ stats.overallAttendanceRate | number:'1.0-1' }}%</div>
+          <div class="d-grid gap-2">
+            <a [routerLink]="['/parent/children', child.id, 'attendance']" class="quick-action py-2">
+              <span class="icon-tile icon-tile-sm tone-success"><i class="bi bi-calendar2-check"></i></span>
+              <span class="qa-title">Attendance</span><i class="bi bi-arrow-right"></i>
+            </a>
+            <a [routerLink]="['/parent/children', child.id, 'results']" class="quick-action py-2">
+              <span class="icon-tile icon-tile-sm tone-violet"><i class="bi bi-mortarboard"></i></span>
+              <span class="qa-title">Exam results</span><i class="bi bi-arrow-right"></i>
+            </a>
+            <a [routerLink]="['/parent/children', child.id, 'fees']" class="quick-action py-2">
+              <span class="icon-tile icon-tile-sm tone-warning"><i class="bi bi-wallet2"></i></span>
+              <span class="qa-title">Fees &amp; receipts</span><i class="bi bi-arrow-right"></i>
+            </a>
+          </div>
         </div>
       </div>
     </div>
   </div>
 
-  <div class="row g-3" *ngIf="!loading">
-    <div class="col-md-4" *ngFor="let child of children">
-      <div class="card border-0 shadow-sm h-100">
-        <div class="card-body">
-          <h5 class="fw-semibold mb-1">{{ child.fullName }}</h5>
-          <p class="text-muted small mb-3">{{ child.gradeLevel }}</p>
-          <div class="d-flex flex-wrap gap-2">
-            <a [routerLink]="['/parent/children', child.id, 'attendance']" class="btn btn-sm btn-outline-primary">Attendance</a>
-            <a [routerLink]="['/parent/children', child.id, 'fees']" class="btn btn-sm btn-outline-success">Fees</a>
-            <a [routerLink]="['/parent/children', child.id, 'results']" class="btn btn-sm btn-outline-warning">Results</a>
+  <div class="col-xl-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h2 class="section-title">Latest announcements</h2>
+      <a routerLink="/parent/announcements" class="small fw-medium">See all <i class="bi bi-arrow-right"></i></a>
+    </div>
+    <div class="card table-card">
+      <app-skeleton-list *ngIf="loadingAnnouncements" [rows]="3"></app-skeleton-list>
+      <app-empty-state *ngIf="!loadingAnnouncements && announcements.length === 0" [compact]="true" icon="megaphone" tone="violet"
+                       title="Nothing new" message="Announcements from the institute will appear here."></app-empty-state>
+      <article class="feed-item" *ngFor="let a of announcements">
+        <div class="min-w-0">
+          <div class="d-flex align-items-center gap-2 mb-1">
+            <span class="badge-soft tone-success" *ngIf="isNew(a)">New</span>
+            <span class="feed-title mb-0 text-truncate">{{ a.title }}</span>
           </div>
+          <div class="feed-body text-truncate mb-1" style="white-space: nowrap">{{ a.message }}</div>
+          <div class="feed-meta"><span>{{ a.postedAt | timeAgo }}</span><span *ngIf="a.targetClassSubject">· {{ a.targetClassSubject }}</span></div>
         </div>
-      </div>
+      </article>
     </div>
-
-    <div class="col-12" *ngIf="children.length === 0">
-      <div class="alert alert-info mb-0">No children are linked to your account yet.</div>
-    </div>
-  </div>
-
-  <div class="mt-4">
-    <a routerLink="/parent/announcements" class="btn btn-outline-secondary btn-sm">View Announcements</a>
   </div>
 </div>

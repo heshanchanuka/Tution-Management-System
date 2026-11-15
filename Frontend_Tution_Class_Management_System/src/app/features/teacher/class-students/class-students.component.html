@@ -1,29 +1,52 @@
-<div class="container-fluid px-4 py-4" style="max-width: 640px;">
-  <a routerLink="/teacher/classes" class="text-decoration-none small">‹ Back to My Classes</a>
+<app-class-header [classId]="classId" [schoolClass]="schoolClass"></app-class-header>
 
-  <h3 class="fw-bold mt-2 mb-4" *ngIf="schoolClass">{{ schoolClass.subject }} — {{ schoolClass.gradeLevel }} Roster</h3>
-
-  <div class="card border-0 shadow-sm">
-    <div class="table-responsive">
-      <table class="table table-hover mb-0 align-middle">
-        <thead class="table-light">
-          <tr>
-            <th>Full Name</th>
-            <th>Grade</th>
-            <th>Parent</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let student of students">
-            <td>{{ student.fullName }}</td>
-            <td>{{ student.gradeLevel }}</td>
-            <td>{{ student.parentName }}</td>
-          </tr>
-          <tr *ngIf="students.length === 0">
-            <td colspan="3" class="text-center text-muted py-4">No students enrolled yet.</td>
-          </tr>
-        </tbody>
-      </table>
+<div class="card table-card">
+  <div class="table-toolbar">
+    <div class="search-box">
+      <div class="input-icon">
+        <i class="bi bi-search"></i>
+        <input type="search" class="form-control" placeholder="Search students or parents…" [(ngModel)]="filter" aria-label="Search roster" />
+      </div>
     </div>
+    <span class="small text-muted" *ngIf="!loading">{{ students.length }} student{{ students.length === 1 ? '' : 's' }}</span>
+  </div>
+
+  <app-skeleton-list *ngIf="loading"></app-skeleton-list>
+
+  <app-empty-state *ngIf="!loading && loadError" icon="wifi-off" tone="danger" title="Couldn't load the roster" message="Check your connection and try again.">
+    <button type="button" class="btn btn-white" (click)="load()"><i class="bi bi-arrow-clockwise"></i> Retry</button>
+  </app-empty-state>
+
+  <app-empty-state *ngIf="!loading && !loadError && students.length === 0" icon="people"
+                   title="No students enrolled yet" message="The institute enrols students into classes. Check back later."></app-empty-state>
+
+  <div class="table-responsive" *ngIf="!loading && !loadError && students.length > 0">
+    <table class="table table-hover align-middle">
+      <thead>
+        <tr>
+          <th style="width: 3rem">#</th>
+          <th>Student</th>
+          <th class="d-none d-sm-table-cell">Grade</th>
+          <th class="d-none d-md-table-cell">Parent</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let student of filtered; let i = index">
+          <td class="text-muted tabular-nums">{{ i + 1 }}</td>
+          <td>
+            <div class="entity">
+              <app-avatar [name]="student.fullName"></app-avatar>
+              <div class="min-w-0">
+                <div class="entity-name">{{ student.fullName }}</div>
+                <div class="entity-meta d-md-none">Parent: {{ student.parentName }}</div>
+              </div>
+            </div>
+          </td>
+          <td class="d-none d-sm-table-cell"><span class="badge-soft tone-neutral">{{ student.gradeLevel }}</span></td>
+          <td class="d-none d-md-table-cell">{{ student.parentName }}</td>
+        </tr>
+        <tr *ngIf="filtered.length === 0"><td colspan="4" class="text-center text-muted py-4">No one matches "{{ filter }}".</td></tr>
+      </tbody>
+    </table>
   </div>
 </div>

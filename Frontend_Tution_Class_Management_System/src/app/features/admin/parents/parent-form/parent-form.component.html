@@ -1,47 +1,94 @@
-<div class="container-fluid px-4 py-4" style="max-width: 560px;">
-  <h3 class="fw-bold mb-4">{{ isEditMode ? 'Edit Parent' : 'Add Parent' }}</h3>
+<app-page-header [title]="isEditMode ? (parent?.fullName || 'Edit parent') : 'Add a parent'"
+                 [subtitle]="isEditMode ? 'Update this parent\'s contact details.' : 'Create an account for a parent. It is active immediately.'"
+                 backLink="/admin/parents" backLabel="Parents">
+  <app-status-badge *ngIf="parent" [status]="parent.enabled ? 'ACTIVE' : 'PENDING'"
+                    [label]="parent.enabled ? 'Active account' : 'Pending approval'"></app-status-badge>
+</app-page-header>
 
-  <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
-    <div class="row" *ngIf="!isEditMode">
-      <div class="col-md-6 mb-3">
-        <label class="form-label">Username</label>
-        <input type="text" formControlName="username" class="form-control"
-               [class.is-invalid]="f['username'].invalid && f['username'].touched" />
+<form class="card form-card" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+  <div class="form-section" *ngIf="!isEditMode">
+    <div>
+      <div class="form-section-title">Sign-in details</div>
+      <p class="form-section-desc">Share these with the parent so they can sign in to the parent portal.</p>
+    </div>
+    <div class="row g-3">
+      <div class="col-md-6">
+        <label class="form-label required" for="username">Username</label>
+        <div class="input-icon">
+          <i class="bi bi-at"></i>
+          <input id="username" type="text" formControlName="username" class="form-control" autocomplete="off"
+                 placeholder="e.g. kamal.perera" [class.is-invalid]="invalid('username')" />
+        </div>
+        <div class="invalid-feedback d-block" *ngIf="invalid('username')">
+          {{ f['username'].errors?.['required'] ? 'Username is required.' : 'At least 4 characters: letters, numbers, dots and underscores.' }}
+        </div>
       </div>
-      <div class="col-md-6 mb-3">
-        <label class="form-label">Initial Password</label>
-        <input type="text" formControlName="password" class="form-control"
-               [class.is-invalid]="f['password'].invalid && f['password'].touched" />
+      <div class="col-md-6">
+        <label class="form-label required" for="password">Temporary password</label>
+        <div class="input-group">
+          <div class="password-field flex-grow-1">
+            <input id="password" [type]="showPassword ? 'text' : 'password'" formControlName="password"
+                   class="form-control rounded-end-0" autocomplete="new-password" [class.is-invalid]="invalid('password')" />
+            <button type="button" class="reveal-btn" (click)="showPassword = !showPassword"
+                    [attr.aria-label]="showPassword ? 'Hide password' : 'Show password'">
+              <i class="bi" [ngClass]="showPassword ? 'bi-eye-slash' : 'bi-eye'"></i>
+            </button>
+          </div>
+          <button type="button" class="btn btn-white" (click)="generatePassword()" title="Generate a password">
+            <i class="bi bi-magic"></i><span class="d-none d-xl-inline">Generate</span>
+          </button>
+        </div>
+        <div class="invalid-feedback d-block" *ngIf="invalid('password')">Password must be at least 8 characters.</div>
       </div>
     </div>
+  </div>
 
-    <div class="mb-3">
-      <label class="form-label">Full Name</label>
-      <input type="text" formControlName="fullName" class="form-control"
-             [class.is-invalid]="f['fullName'].invalid && f['fullName'].touched" />
-      <div class="invalid-feedback" *ngIf="f['fullName'].invalid && f['fullName'].touched">
-        Full name is required.
+  <div class="form-section">
+    <div>
+      <div class="form-section-title">Contact details</div>
+      <p class="form-section-desc">Used by the institute to reach the parent about their children.</p>
+    </div>
+    <div class="row g-3" *ngIf="!loading; else loadingTpl">
+      <div class="col-md-6">
+        <label class="form-label required" for="fullName">Full name</label>
+        <input id="fullName" type="text" formControlName="fullName" class="form-control" placeholder="e.g. Kamal Perera"
+               [class.is-invalid]="invalid('fullName')" />
+        <div class="invalid-feedback">Full name is required.</div>
+      </div>
+      <div class="col-md-6">
+        <label class="form-label" for="phone">Phone</label>
+        <div class="input-icon">
+          <i class="bi bi-telephone"></i>
+          <input id="phone" type="tel" formControlName="phone" class="form-control" placeholder="077 123 4567"
+                 [class.is-invalid]="invalid('phone')" />
+        </div>
+        <div class="invalid-feedback d-block" *ngIf="invalid('phone')">Phone number must be 7-20 digits.</div>
+      </div>
+      <div class="col-md-6">
+        <label class="form-label" for="occupation">Occupation</label>
+        <input id="occupation" type="text" formControlName="occupation" class="form-control" placeholder="Optional" />
+      </div>
+      <div class="col-md-6">
+        <label class="form-label" for="address">Address</label>
+        <input id="address" type="text" formControlName="address" class="form-control" placeholder="Optional" />
       </div>
     </div>
+  </div>
 
-    <div class="mb-3">
-      <label class="form-label">Phone</label>
-      <input type="text" formControlName="phone" class="form-control" />
-    </div>
-
-    <div class="mb-3">
-      <label class="form-label">Address</label>
-      <input type="text" formControlName="address" class="form-control" />
-    </div>
-
-    <div class="mb-4">
-      <label class="form-label">Occupation</label>
-      <input type="text" formControlName="occupation" class="form-control" />
-    </div>
-
-    <button type="submit" class="btn btn-primary" [disabled]="submitting">
-      {{ isEditMode ? 'Save Changes' : 'Create Parent' }}
+  <div class="form-footer">
+    <a routerLink="/admin/parents" class="btn btn-white">Cancel</a>
+    <button type="submit" class="btn btn-primary" [disabled]="submitting || loading">
+      <span *ngIf="submitting" class="spinner-border spinner-border-sm"></span>
+      {{ isEditMode ? 'Save changes' : 'Create parent' }}
     </button>
-    <a routerLink="/admin/parents" class="btn btn-outline-secondary ms-2">Cancel</a>
-  </form>
-</div>
+  </div>
+</form>
+
+<ng-template #loadingTpl>
+  <div class="row g-3">
+    <div class="col-md-6" *ngFor="let i of [1, 2, 3, 4]">
+      <span class="skeleton mb-2" style="height: .8rem; width: 30%"></span>
+      <span class="skeleton" style="height: 2.4rem"></span>
+    </div>
+  </div>
+</ng-template>

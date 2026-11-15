@@ -1,33 +1,28 @@
-<div class="container-fluid px-4 py-4">
-  <h3 class="fw-bold mb-3">My Children</h3>
+<app-page-header title="My children" subtitle="Students linked to your account."></app-page-header>
 
-  <div class="card border-0 shadow-sm">
-    <div class="table-responsive">
-      <table class="table table-hover mb-0 align-middle">
-        <thead class="table-light">
-          <tr>
-            <th>Full Name</th>
-            <th>Grade</th>
-            <th>Date of Birth</th>
-            <th class="text-end">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let child of children">
-            <td>{{ child.fullName }}</td>
-            <td>{{ child.gradeLevel }}</td>
-            <td>{{ child.dateOfBirth || '—' }}</td>
-            <td class="text-end">
-              <a [routerLink]="[child.id, 'attendance']" class="btn btn-sm btn-outline-primary me-2">Attendance</a>
-              <a [routerLink]="[child.id, 'fees']" class="btn btn-sm btn-outline-success me-2">Fees</a>
-              <a [routerLink]="[child.id, 'results']" class="btn btn-sm btn-outline-warning">Results</a>
-            </td>
-          </tr>
-          <tr *ngIf="!loading && children.length === 0">
-            <td colspan="4" class="text-center text-muted py-4">No children are linked to your account yet.</td>
-          </tr>
-        </tbody>
-      </table>
+<div class="row g-3" *ngIf="loading">
+  <div class="col-md-6 col-xl-4" *ngFor="let i of [1, 2]">
+    <div class="item-card"><span class="skeleton mb-3" style="height: 3.75rem; width: 3.75rem; border-radius: 50%"></span><span class="skeleton" style="height: 1rem; width: 50%"></span></div>
+  </div>
+</div>
+
+<div class="card" *ngIf="!loading && children.length === 0">
+  <app-empty-state icon="person-plus" title="No children linked yet"
+                   message="The institute links your children to your account when they're registered. Contact the office if this looks wrong."></app-empty-state>
+</div>
+
+<div class="row g-3" *ngIf="!loading && children.length > 0">
+  <div class="col-md-6 col-xl-4" *ngFor="let child of children">
+    <div class="item-card text-center">
+      <app-avatar class="d-block mb-3" [name]="child.fullName" size="xl"></app-avatar>
+      <h3 class="h6 fw-bold mb-1">{{ child.fullName }}</h3>
+      <div class="text-muted small mb-1">{{ child.gradeLevel }}</div>
+      <div class="text-muted small" *ngIf="child.dateOfBirth">Born {{ child.dateOfBirth | date:'d MMMM y' }}</div>
+      <div class="item-card-footer justify-content-center">
+        <a [routerLink]="[child.id, 'attendance']" class="btn btn-sm btn-soft-success"><i class="bi bi-calendar2-check"></i> Attendance</a>
+        <a [routerLink]="[child.id, 'results']" class="btn btn-sm btn-soft-primary"><i class="bi bi-mortarboard"></i> Results</a>
+        <a [routerLink]="[child.id, 'fees']" class="btn btn-sm btn-soft-warning"><i class="bi bi-wallet2"></i> Fees</a>
+      </div>
     </div>
   </div>
 </div>

@@ -1,0 +1,420 @@
+// Base element styles and Bootstrap refinements.
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--app-bg);
+  color: var(--app-text);
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  color: var(--app-text);
+  letter-spacing: -.015em;
+}
+
+::selection {
+  background: rgba(79, 70, 229, .18);
+}
+
+.text-muted,
+.text-secondary {
+  color: var(--app-muted) !important;
+}
+
+.small, small {
+  font-size: .8125rem;
+}
+
+.fw-medium { font-weight: 500 !important; }
+.fw-semibold { font-weight: 600 !important; }
+.tabular-nums { font-variant-numeric: tabular-nums; }
+.min-w-0 { min-width: 0; }
+.cursor-pointer { cursor: pointer; }
+
+// Visible keyboard focus everywhere, invisible for mouse users.
+:focus-visible {
+  outline: 2px solid var(--app-primary);
+  outline-offset: 2px;
+}
+
+.btn:focus-visible,
+.form-control:focus-visible,
+.form-select:focus-visible {
+  outline: none;
+}
+
+// ---- Buttons ----
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .45rem;
+  transition: background-color .15s ease, border-color .15s ease, color .15s ease, box-shadow .15s ease, transform .05s ease;
+
+  &:active:not(:disabled) {
+    transform: translateY(1px);
+  }
+
+  .bi {
+    font-size: 1.05em;
+    line-height: 1;
+  }
+}
+
+.btn-primary {
+  box-shadow: 0 1px 2px rgba(79, 70, 229, .25), inset 0 1px 0 rgba(255, 255, 255, .12);
+}
+
+[data-bs-theme="dark"] .btn-primary {
+  --bs-btn-bg: #6366f1;
+  --bs-btn-border-color: #6366f1;
+  --bs-btn-hover-bg: #4f46e5;
+  --bs-btn-hover-border-color: #4f46e5;
+}
+
+.btn-white {
+  background: var(--app-surface);
+  color: var(--app-text-2);
+  border: 1px solid var(--app-border-strong);
+  box-shadow: var(--app-shadow-xs);
+
+  &:hover,
+  &:focus-visible {
+    background: var(--app-surface-hover);
+    color: var(--app-text);
+    border-color: var(--app-border-strong);
+  }
+}
+
+.btn-soft-primary,
+.btn-soft-success,
+.btn-soft-danger,
+.btn-soft-warning {
+  border: 1px solid transparent;
+  &:hover { filter: brightness(.97); }
+}
+.btn-soft-primary { background: var(--tone-primary-bg); color: var(--tone-primary-fg); &:hover { color: var(--tone-primary-fg); background: var(--tone-primary-bg); } }
+.btn-soft-success { background: var(--tone-success-bg); color: var(--tone-success-fg); &:hover { color: var(--tone-success-fg); background: var(--tone-success-bg); } }
+.btn-soft-danger  { background: var(--tone-danger-bg);  color: var(--tone-danger-fg);  &:hover { color: var(--tone-danger-fg);  background: var(--tone-danger-bg); } }
+.btn-soft-warning { background: var(--tone-warning-bg); color: var(--tone-warning-fg); &:hover { color: var(--tone-warning-fg); background: var(--tone-warning-bg); } }
+
+// Square icon-only button used in table action columns.
+.btn-icon {
+  width: 2.125rem;
+  height: 2.125rem;
+  padding: 0;
+  border-radius: .5rem;
+  color: var(--app-muted);
+  background: transparent;
+  border: 1px solid transparent;
+
+  &:hover,
+  &:focus-visible {
+    background: var(--app-surface-hover);
+    color: var(--app-text);
+  }
+
+  &.btn-icon-danger:hover { background: var(--tone-danger-bg); color: var(--tone-danger-fg); }
+  &.btn-icon-success:hover { background: var(--tone-success-bg); color: var(--tone-success-fg); }
+  &.btn-icon-primary:hover { background: var(--tone-primary-bg); color: var(--tone-primary-fg); }
+}
+
+// ---- Forms ----
+.form-control,
+.form-select {
+  background-color: var(--app-surface);
+  border-color: var(--app-border-strong);
+  color: var(--app-text);
+  box-shadow: var(--app-shadow-xs);
+
+  &:hover:not(:focus):not(:disabled) {
+    border-color: #c3c9d6;
+  }
+}
+
+[data-bs-theme="dark"] {
+  .form-control:hover:not(:focus):not(:disabled),
+  .form-select:hover:not(:focus):not(:disabled) {
+    border-color: #36446a;
+  }
+}
+
+.form-label {
+  color: var(--app-text-2);
+  font-size: .875rem;
+}
+
+.form-text {
+  color: var(--app-muted);
+  font-size: .8rem;
+}
+
+.invalid-feedback {
+  font-size: .8rem;
+}
+
+.required::after {
+  content: " *";
+  color: var(--bs-danger);
+}
+
+// Input with a leading icon: <div class="input-icon"><i class="bi ..."></i><input class="form-control"></div>
+.input-icon {
+  position: relative;
+
+  > .bi {
+    position: absolute;
+    left: .85rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--app-subtle);
+    pointer-events: none;
+  }
+
+  > .form-control {
+    padding-left: 2.4rem;
+  }
+
+  > .input-icon-end {
+    position: absolute;
+    right: .35rem;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+}
+
+.input-group-text {
+  background: var(--app-surface-2);
+  border-color: var(--app-border-strong);
+  color: var(--app-muted);
+}
+
+// ---- Cards ----
+.card {
+  --bs-card-bg: var(--app-surface);
+  --bs-card-border-color: var(--app-border);
+  box-shadow: var(--app-shadow-sm);
+}
+
+.card-header {
+  border-bottom-color: var(--app-border);
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+}
+
+.card-title {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 0;
+}
+
+.card-subtitle-muted {
+  color: var(--app-muted);
+  font-size: .8125rem;
+}
+
+// ---- Tables ----
+.table {
+  --bs-table-bg: transparent;
+  --bs-table-hover-bg: var(--app-surface-hover);
+  --bs-table-color: var(--app-text);
+  --bs-table-hover-color: var(--app-text);
+  margin-bottom: 0;
+
+  > :not(caption) > * > * {
+    border-bottom-color: var(--app-border);
+  }
+
+  thead th {
+    background: var(--app-surface-2);
+    color: var(--app-muted);
+    font-size: .72rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    white-space: nowrap;
+    border-bottom-color: var(--app-border);
+  }
+
+  tbody tr:last-child > * {
+    border-bottom: 0;
+  }
+}
+
+.table-actions {
+  white-space: nowrap;
+  text-align: right;
+  width: 1%;
+}
+
+// ---- Badges ----
+.badge {
+  letter-spacing: .01em;
+}
+
+.badge-soft {
+  display: inline-flex;
+  align-items: center;
+  gap: .35rem;
+  padding: .3rem .6rem;
+  border-radius: 50rem;
+  font-size: .75rem;
+  font-weight: 600;
+  line-height: 1.2;
+  white-space: nowrap;
+
+  .dot {
+    width: .4rem;
+    height: .4rem;
+    border-radius: 50%;
+    background: currentColor;
+  }
+}
+
+@each $tone in "primary", "success", "warning", "danger", "info", "violet", "neutral" {
+  .tone-#{$tone} {
+    background: var(--tone-#{$tone}-bg) !important;
+    color: var(--tone-#{$tone}-fg) !important;
+  }
+  .text-tone-#{$tone} {
+    color: var(--tone-#{$tone}-fg) !important;
+  }
+}
+
+// ---- Nav pills (used as segmented tabs) ----
+.nav-segmented {
+  display: inline-flex;
+  gap: .25rem;
+  padding: .25rem;
+  background: var(--app-surface-2);
+  border: 1px solid var(--app-border);
+  border-radius: .75rem;
+  flex-wrap: wrap;
+
+  .nav-link {
+    display: inline-flex;
+    align-items: center;
+    gap: .45rem;
+    border: 0;
+    border-radius: .55rem;
+    padding: .45rem .9rem;
+    color: var(--app-muted);
+    font-weight: 500;
+    font-size: .875rem;
+    background: transparent;
+
+    &:hover {
+      color: var(--app-text);
+    }
+
+    &.active {
+      background: var(--app-surface);
+      color: var(--app-text);
+      box-shadow: var(--app-shadow-sm);
+    }
+  }
+}
+
+// ---- Progress ----
+.progress {
+  background-color: var(--app-surface-hover);
+}
+
+// ---- Dropdown (our own, no Bootstrap JS) ----
+.app-dropdown-menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + .5rem);
+  min-width: 15rem;
+  background: var(--app-surface);
+  border: 1px solid var(--app-border);
+  border-radius: .75rem;
+  box-shadow: var(--app-shadow-lg);
+  padding: .4rem;
+  z-index: 1050;
+  animation: app-pop .14s ease-out;
+
+  .dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    border-radius: .5rem;
+    padding: .55rem .7rem;
+    color: var(--app-text-2);
+    font-size: .875rem;
+
+    &:hover,
+    &:focus {
+      background: var(--app-surface-hover);
+      color: var(--app-text);
+    }
+  }
+
+  .dropdown-divider {
+    border-color: var(--app-border);
+    margin: .35rem 0;
+  }
+}
+
+@keyframes app-pop {
+  from { opacity: 0; transform: translateY(-4px) scale(.98); }
+  to   { opacity: 1; transform: none; }
+}
+
+@keyframes app-fade-up {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: none; }
+}
+
+@keyframes app-shimmer {
+  0%   { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: .001ms !important;
+    transition-duration: .001ms !important;
+  }
+}
+
+// ---- Toasts (ngx-toastr) ----
+.toast-container {
+  .ngx-toastr {
+    width: 360px;
+    padding: 14px 16px 14px 52px;
+    border-radius: .75rem;
+    box-shadow: var(--app-shadow-lg);
+    background-position: 18px center;
+    background-size: 20px;
+    font-size: .875rem;
+    opacity: 1;
+
+    &:hover {
+      box-shadow: var(--app-shadow-lg);
+    }
+  }
+
+  .toast-title {
+    font-weight: 600;
+    margin-bottom: 2px;
+  }
+
+  .toast-success { background-color: #15803d; }
+  .toast-error   { background-color: #b91c1c; }
+  .toast-warning { background-color: #b45309; }
+  .toast-info    { background-color: #0369a1; }
+}
+
+.toast-top-right {
+  top: 16px;
+  right: 16px;
+}

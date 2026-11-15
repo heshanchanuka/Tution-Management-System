@@ -1,61 +1,157 @@
-<div class="container-fluid px-4 py-4">
-  <h3 class="fw-bold mb-1">Welcome, {{ authService.getUser()?.fullName }}</h3>
-  <p class="text-muted mb-4">Here's how the institute is doing.</p>
+<section class="welcome-banner">
+  <div class="row align-items-center g-3 position-relative" style="z-index: 1">
+    <div class="col-lg">
+      <div class="welcome-date">{{ today | date:'EEEE, d MMMM y' }}</div>
+      <h2>{{ greeting }}, {{ firstName }} 👋</h2>
+      <p>Here's what's happening at the institute today.</p>
+    </div>
+    <div class="col-lg-auto d-flex flex-wrap gap-2">
+      <a routerLink="/admin/reports" class="btn btn-light"><i class="bi bi-bar-chart-line"></i> View reports</a>
+      <a routerLink="/admin/fees" class="btn btn-ghost-light"><i class="bi bi-wallet2"></i> Fees</a>
+    </div>
+  </div>
+</section>
 
-  <div class="row g-3" *ngIf="stats">
-    <div class="col-md-3 col-6">
-      <div class="card border-0 shadow-sm h-100">
-        <div class="card-body">
-          <div class="text-muted small">Students</div>
-          <div class="fs-3 fw-bold text-primary">{{ stats.totalStudents }}</div>
-        </div>
-      </div>
+<!-- Pending registrations callout -->
+<ng-container *ngIf="parentService.pendingCount$ | async as pending">
+  <div class="callout callout-warning mb-4 fade-in" *ngIf="pending > 0">
+    <i class="bi bi-person-exclamation fs-4"></i>
+    <div class="flex-grow-1">
+      <div class="callout-title">{{ pending }} parent registration{{ pending === 1 ? '' : 's' }} waiting for approval</div>
+      <p class="callout-text">New parents can't sign in until you approve their account.</p>
     </div>
-    <div class="col-md-3 col-6">
-      <div class="card border-0 shadow-sm h-100">
-        <div class="card-body">
-          <div class="text-muted small">Teachers</div>
-          <div class="fs-3 fw-bold text-success">{{ stats.totalTeachers }}</div>
-        </div>
-      </div>
-    </div>
-    <div class="col-md-3 col-6">
-      <div class="card border-0 shadow-sm h-100">
-        <div class="card-body">
-          <div class="text-muted small">Parents</div>
-          <div class="fs-3 fw-bold text-warning">{{ stats.totalParents }}</div>
-        </div>
-      </div>
-    </div>
-    <div class="col-md-3 col-6">
-      <div class="card border-0 shadow-sm h-100">
-        <div class="card-body">
-          <div class="text-muted small">Classes</div>
-          <div class="fs-3 fw-bold text-info">{{ stats.totalClasses }}</div>
-        </div>
-      </div>
-    </div>
+    <a routerLink="/admin/parents" [queryParams]="{ tab: 'pending' }" class="btn btn-sm btn-warning align-self-center">Review now</a>
+  </div>
+</ng-container>
 
-    <div class="col-md-6">
-      <div class="card border-0 shadow-sm h-100">
-        <div class="card-body">
-          <div class="text-muted small">This Month's Revenue</div>
-          <div class="fs-3 fw-bold text-success">Rs. {{ stats.monthlyRevenue | number:'1.2-2' }}</div>
+<div class="row g-3 mb-4">
+  <div class="col-6 col-xl-3">
+    <app-stat-card label="Students" icon="backpack" tone="primary" [value]="stats?.totalStudents ?? '—'"
+                   [loading]="loadingStats" link="/admin/students"></app-stat-card>
+  </div>
+  <div class="col-6 col-xl-3">
+    <app-stat-card label="Teachers" icon="easel" tone="success" [value]="stats?.totalTeachers ?? '—'"
+                   [loading]="loadingStats" link="/admin/teachers"></app-stat-card>
+  </div>
+  <div class="col-6 col-xl-3">
+    <app-stat-card label="Parents" icon="people" tone="warning" [value]="stats?.totalParents ?? '—'"
+                   [loading]="loadingStats" link="/admin/parents"></app-stat-card>
+  </div>
+  <div class="col-6 col-xl-3">
+    <app-stat-card label="Classes" icon="journal-bookmark" tone="info" [value]="stats?.totalClasses ?? '—'"
+                   [loading]="loadingStats" link="/admin/classes"></app-stat-card>
+  </div>
+</div>
+
+<div class="row g-3 mb-4">
+  <!-- Revenue -->
+  <div class="col-xl-8">
+    <div class="card h-100">
+      <div class="card-header d-flex justify-content-between align-items-start gap-3">
+        <div>
+          <h2 class="card-title">Revenue</h2>
+          <div class="card-subtitle-muted">Payments received over the last 6 months</div>
+        </div>
+        <div class="text-end">
+          <div class="fw-bold fs-5 tabular-nums">{{ revenueTotal | lkr:0 }}</div>
+          <div class="small text-muted">6-month total</div>
         </div>
       </div>
-    </div>
-    <div class="col-md-6">
-      <div class="card border-0 shadow-sm h-100">
-        <div class="card-body">
-          <div class="text-muted small">Today's Attendance Rate</div>
-          <div class="fs-3 fw-bold text-primary">{{ stats.todayAttendanceRate | number:'1.0-1' }}%</div>
+      <div class="card-body">
+        <span class="skeleton" *ngIf="loadingRevenue" style="height: 240px;"></span>
+        <app-empty-state *ngIf="!loadingRevenue && revenueTotal === 0" [compact]="true" icon="graph-up"
+                         title="No payments yet" message="Revenue appears here once payments are recorded."></app-empty-state>
+        <div class="chart-box chart-box-sm" [hidden]="loadingRevenue || revenueTotal === 0" style="height: 240px">
+          <canvas #revenueCanvas aria-label="Revenue chart" role="img"></canvas>
         </div>
       </div>
     </div>
   </div>
 
-  <div class="mt-4">
-    <a routerLink="/admin/reports" class="btn btn-outline-primary btn-sm me-2">View Reports</a>
-    <a routerLink="/admin/announcements" class="btn btn-outline-secondary btn-sm">Manage Announcements</a>
+  <!-- Today -->
+  <div class="col-xl-4">
+    <div class="card h-100">
+      <div class="card-header">
+        <h2 class="card-title">This month at a glance</h2>
+      </div>
+      <div class="card-body d-flex flex-column gap-4">
+        <div class="d-flex align-items-center gap-3">
+          <span class="icon-tile icon-tile-lg tone-success"><i class="bi bi-cash-stack"></i></span>
+          <div>
+            <div class="small text-muted">Revenue this month</div>
+            <span class="skeleton" *ngIf="loadingStats" style="height: 1.5rem; width: 9rem"></span>
+            <div class="fs-4 fw-bold tabular-nums" *ngIf="!loadingStats">{{ stats?.monthlyRevenue | lkr:0 }}</div>
+          </div>
+        </div>
+        <div class="d-flex align-items-center gap-3">
+          <div class="ring" [style.--value]="stats?.todayAttendanceRate ?? 0"
+               [style.--ring-color]="(stats?.todayAttendanceRate ?? 0) >= 80 ? '#22c55e' : (stats?.todayAttendanceRate ?? 0) >= 60 ? '#f59e0b' : '#ef4444'">
+            <span class="ring-label">{{ (stats?.todayAttendanceRate ?? 0) | number:'1.0-0' }}%</span>
+          </div>
+          <div>
+            <div class="fw-semibold">Today's attendance</div>
+            <div class="small text-muted">Across all sessions marked today</div>
+          </div>
+        </div>
+        <a routerLink="/admin/fees" class="btn btn-white mt-auto"><i class="bi bi-receipt"></i> Generate this month's invoices</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3">
+  <!-- Quick actions -->
+  <div class="col-xl-5">
+    <h2 class="section-title mb-3">Quick actions</h2>
+    <div class="d-grid gap-2">
+      <a *ngFor="let action of quickActions" class="quick-action" [routerLink]="action.link">
+        <span class="icon-tile" [ngClass]="'tone-' + action.tone"><i class="bi" [ngClass]="'bi-' + action.icon"></i></span>
+        <div>
+          <div class="qa-title">{{ action.title }}</div>
+          <div class="qa-desc">{{ action.desc }}</div>
+        </div>
+        <i class="bi bi-arrow-right"></i>
+      </a>
+    </div>
+  </div>
+
+  <!-- Overdue -->
+  <div class="col-xl-7">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h2 class="section-title">Overdue fees</h2>
+      <a routerLink="/admin/fees" [queryParams]="{ tab: 'overdue' }" class="small fw-medium" *ngIf="overdueTotal > 0">
+        View all {{ overdueTotal }} <i class="bi bi-arrow-right"></i>
+      </a>
+    </div>
+    <div class="card table-card">
+      <app-skeleton-list *ngIf="loadingOverdue" [rows]="4"></app-skeleton-list>
+      <app-empty-state *ngIf="!loadingOverdue && overdue.length === 0" [compact]="true" icon="emoji-smile" tone="success"
+                       title="No overdue fees" message="Every invoice is paid or still within its due date."></app-empty-state>
+      <div class="table-responsive" *ngIf="!loadingOverdue && overdue.length > 0">
+        <table class="table align-middle">
+          <thead>
+            <tr><th>Student</th><th>Class</th><th class="text-end">Balance</th></tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let invoice of overdue">
+              <td>
+                <div class="entity">
+                  <app-avatar [name]="invoice.studentName" size="sm"></app-avatar>
+                  <div class="min-w-0">
+                    <div class="entity-name">{{ invoice.studentName }}</div>
+                    <div class="entity-meta">Due {{ invoice.dueDate | date:'d MMM y' }}</div>
+                  </div>
+                </div>
+              </td>
+              <td>
+                <div class="fw-medium">{{ invoice.subject }}</div>
+                <div class="small text-muted">{{ invoice.period }}</div>
+              </td>
+              <td class="text-end fw-semibold text-tone-danger tabular-nums">{{ (invoice.amountDue - invoice.amountPaid) | lkr }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
   </div>
 </div>

@@ -1,62 +1,80 @@
-<div class="container-fluid px-4 py-4" style="max-width: 680px;">
-  <a routerLink="/parent/children" class="text-decoration-none small">‹ Back to My Children</a>
+<app-child-header [childId]="studentId" [child]="child"></app-child-header>
 
-  <h3 class="fw-bold mt-2 mb-3" *ngIf="child">{{ child.fullName }} — Attendance</h3>
+<div class="card mb-3">
+  <div class="card-body d-flex flex-wrap align-items-end gap-3">
+    <div class="nav-segmented">
+      <button *ngFor="let p of presets" type="button" class="nav-link py-1" [class.active]="isPreset(p.days)" (click)="applyPreset(p.days)">{{ p.label }}</button>
+    </div>
+    <div>
+      <label class="form-label small mb-1" for="from">From</label>
+      <input id="from" type="date" class="form-control form-control-sm" [(ngModel)]="from" [max]="to" (change)="load()" />
+    </div>
+    <div>
+      <label class="form-label small mb-1" for="to">To</label>
+      <input id="to" type="date" class="form-control form-control-sm" [(ngModel)]="to" [max]="today" (change)="load()" />
+    </div>
+    <div class="ms-lg-auto" *ngIf="subjects.length > 1">
+      <label class="form-label small mb-1" for="subject">Subject</label>
+      <select id="subject" class="form-select form-select-sm" [(ngModel)]="subjectFilter">
+        <option value="">All subjects</option>
+        <option *ngFor="let s of subjects" [value]="s">{{ s }}</option>
+      </select>
+    </div>
+  </div>
+</div>
 
-  <div class="row g-2 mb-3">
-    <div class="col-auto">
-      <span class="badge bg-success">Present: {{ presentCount }}</span>
+<app-empty-state *ngIf="!loading && loadError" icon="wifi-off" tone="danger" title="Couldn't load attendance"
+                 message="Check your connection and try again.">
+  <button type="button" class="btn btn-white" (click)="load()"><i class="bi bi-arrow-clockwise"></i> Retry</button>
+</app-empty-state>
+
+<ng-container *ngIf="!loadError">
+  <div class="row g-3 mb-3">
+    <div class="col-md-4">
+      <div class="card h-100">
+        <div class="card-body d-flex align-items-center gap-3">
+          <div class="ring" [style.--value]="rate" [style.--ring-color]="rateColor">
+            <span class="ring-label">{{ rate | number:'1.0-0' }}%</span>
+          </div>
+          <div>
+            <div class="fw-semibold">Attendance rate</div>
+            <div class="small text-muted">{{ visible.length }} session{{ visible.length === 1 ? '' : 's' }} in this period</div>
+          </div>
+        </div>
+      </div>
     </div>
-    <div class="col-auto">
-      <span class="badge bg-warning">Late: {{ lateCount }}</span>
+    <div class="col-4 col-md-8 col-lg">
+      <app-stat-card label="Present" icon="check-circle" tone="success" [value]="presentCount" [loading]="loading"></app-stat-card>
     </div>
-    <div class="col-auto">
-      <span class="badge bg-danger">Absent: {{ absentCount }}</span>
+    <div class="col-4 col-lg">
+      <app-stat-card label="Late" icon="clock" tone="warning" [value]="lateCount" [loading]="loading"></app-stat-card>
+    </div>
+    <div class="col-4 col-lg">
+      <app-stat-card label="Absent" icon="x-circle" tone="danger" [value]="absentCount" [loading]="loading"></app-stat-card>
     </div>
   </div>
 
-  <div class="row g-2 align-items-end mb-3">
-    <div class="col-auto">
-      <label class="form-label">From</label>
-      <input type="date" class="form-control" [(ngModel)]="from" />
-    </div>
-    <div class="col-auto">
-      <label class="form-label">To</label>
-      <input type="date" class="form-control" [(ngModel)]="to" />
-    </div>
-    <div class="col-auto">
-      <button type="button" class="btn btn-outline-secondary" (click)="load()">Filter</button>
-    </div>
-  </div>
+  <div class="card table-card">
+    <app-skeleton-list *ngIf="loading" [rows]="6" [avatar]="false"></app-skeleton-list>
+    <app-empty-state *ngIf="!loading && visible.length === 0" icon="calendar-x" title="No attendance in this period"
+                     message="Try a longer date range."></app-empty-state>
 
-  <div class="card border-0 shadow-sm">
-    <div class="table-responsive">
-      <table class="table table-sm mb-0 align-middle">
-        <thead class="table-light">
-          <tr>
-            <th>Date</th>
-            <th>Subject</th>
-            <th>Status</th>
-          </tr>
+    <div class="table-responsive" *ngIf="!loading && visible.length > 0">
+      <table class="table align-middle">
+        <thead>
+          <tr><th>Date</th><th>Subject</th><th class="text-end">Status</th></tr>
         </thead>
         <tbody>
-          <tr *ngFor="let record of records">
-            <td>{{ record.date }}</td>
-            <td>{{ record.subject }}</td>
+          <tr *ngFor="let record of visible">
             <td>
-              <span class="badge"
-                    [class.bg-success]="record.status === 'PRESENT'"
-                    [class.bg-warning]="record.status === 'LATE'"
-                    [class.bg-danger]="record.status === 'ABSENT'">
-                {{ record.status }}
-              </span>
+              <div class="fw-medium">{{ record.date | date:'d MMM y' }}</div>
+              <div class="small text-muted">{{ record.date | date:'EEEE' }}</div>
             </td>
-          </tr>
-          <tr *ngIf="!loading && records.length === 0">
-            <td colspan="3" class="text-center text-muted py-4">No attendance records in this range.</td>
+            <td>{{ record.subject }}</td>
+            <td class="text-end"><app-status-badge [status]="record.status"></app-status-badge></td>
           </tr>
         </tbody>
       </table>
     </div>
   </div>
-</div>
+</ng-container>

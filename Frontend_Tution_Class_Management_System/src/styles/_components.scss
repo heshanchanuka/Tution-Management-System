@@ -1,0 +1,657 @@
+// Shared UI-kit styles. Component templates use these classes; component .scss files stay empty.
+
+// ---- Page header ----
+.page-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+
+  .page-back {
+    display: inline-flex;
+    align-items: center;
+    gap: .35rem;
+    color: var(--app-muted);
+    font-size: .8125rem;
+    font-weight: 500;
+    margin-bottom: .5rem;
+
+    &:hover {
+      color: var(--app-primary);
+      text-decoration: none;
+    }
+  }
+
+  .page-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin: 0;
+    line-height: 1.25;
+  }
+
+  .page-subtitle {
+    color: var(--app-muted);
+    margin: .3rem 0 0;
+    font-size: .9rem;
+  }
+
+  .page-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .5rem;
+  }
+}
+
+// ---- Stat card ----
+.stat-card {
+  position: relative;
+  height: 100%;
+  padding: 1.15rem 1.25rem;
+  background: var(--app-surface);
+  border: 1px solid var(--app-border);
+  border-radius: var(--bs-border-radius-lg);
+  box-shadow: var(--app-shadow-sm);
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  transition: box-shadow .2s ease, transform .2s ease;
+
+  &.is-link:hover {
+    box-shadow: var(--app-shadow-md);
+    transform: translateY(-1px);
+  }
+
+  .stat-icon {
+    flex-shrink: 0;
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: .75rem;
+    display: grid;
+    place-items: center;
+    font-size: 1.25rem;
+  }
+
+  .stat-label {
+    color: var(--app-muted);
+    font-size: .8125rem;
+    font-weight: 500;
+    margin-bottom: .2rem;
+  }
+
+  .stat-value {
+    font-size: 1.6rem;
+    font-weight: 700;
+    letter-spacing: -.02em;
+    line-height: 1.2;
+    font-variant-numeric: tabular-nums;
+    color: var(--app-text);
+  }
+
+  .stat-hint {
+    color: var(--app-muted);
+    font-size: .78rem;
+    margin-top: .25rem;
+  }
+}
+
+// ---- Icon tile (coloured rounded square holding an icon) ----
+.icon-tile {
+  flex-shrink: 0;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: .7rem;
+  display: inline-grid;
+  place-items: center;
+  font-size: 1.15rem;
+
+  &.icon-tile-sm { width: 2rem; height: 2rem; font-size: .95rem; border-radius: .55rem; }
+  &.icon-tile-lg { width: 3.25rem; height: 3.25rem; font-size: 1.5rem; border-radius: .9rem; }
+}
+
+// ---- Avatar ----
+.avatar {
+  flex-shrink: 0;
+  display: inline-grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 50%;
+  font-size: .8rem;
+  font-weight: 600;
+  letter-spacing: .02em;
+  user-select: none;
+
+  &.avatar-sm { width: 1.85rem; height: 1.85rem; font-size: .7rem; }
+  &.avatar-lg { width: 3rem; height: 3rem; font-size: 1rem; }
+  &.avatar-xl { width: 3.75rem; height: 3.75rem; font-size: 1.25rem; }
+}
+
+// Name + secondary line next to an avatar, used in table cells and lists.
+.entity {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  min-width: 0;
+
+  .entity-name {
+    font-weight: 600;
+    color: var(--app-text);
+    line-height: 1.3;
+  }
+
+  .entity-meta {
+    color: var(--app-muted);
+    font-size: .8rem;
+    line-height: 1.3;
+  }
+}
+
+// ---- Toolbar above tables ----
+.table-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: .75rem;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--app-border);
+
+  .search-box {
+    width: 100%;
+    max-width: 320px;
+  }
+}
+
+.table-footer {
+  padding: .85rem 1.25rem;
+  border-top: 1px solid var(--app-border);
+}
+
+.table-card {
+  overflow: hidden;
+
+  .table-responsive {
+    margin: 0;
+  }
+}
+
+// ---- Empty state ----
+.empty-state {
+  text-align: center;
+  padding: 3rem 1.5rem;
+  animation: app-fade-up .25s ease-out;
+
+  .empty-icon {
+    width: 4rem;
+    height: 4rem;
+    margin: 0 auto 1rem;
+    border-radius: 1.1rem;
+    display: grid;
+    place-items: center;
+    font-size: 1.75rem;
+    background: var(--tone-primary-bg);
+    color: var(--tone-primary-fg);
+  }
+
+  .empty-title {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: .35rem;
+    color: var(--app-text);
+  }
+
+  .empty-message {
+    color: var(--app-muted);
+    font-size: .875rem;
+    max-width: 380px;
+    margin: 0 auto;
+  }
+
+  .empty-action {
+    margin-top: 1.25rem;
+  }
+
+  &.empty-compact {
+    padding: 2rem 1rem;
+
+    .empty-icon { width: 3rem; height: 3rem; font-size: 1.3rem; }
+  }
+}
+
+// ---- Skeleton loading ----
+.skeleton {
+  display: block;
+  border-radius: .4rem;
+  background: linear-gradient(90deg, var(--app-skeleton) 0, var(--app-skeleton-shine) 40px, var(--app-skeleton) 80px);
+  background-size: 800px 100%;
+  animation: app-shimmer 1.3s infinite linear;
+}
+
+.skeleton-list {
+  padding: .5rem 1.25rem;
+
+  .skeleton-row {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: .85rem 0;
+    border-bottom: 1px solid var(--app-border);
+
+    &:last-child { border-bottom: 0; }
+  }
+}
+
+// ---- Pagination ----
+.app-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: .75rem;
+
+  .page-info {
+    color: var(--app-muted);
+    font-size: .8125rem;
+  }
+
+  .page-buttons {
+    display: flex;
+    align-items: center;
+    gap: .25rem;
+  }
+
+  .page-btn {
+    min-width: 2.1rem;
+    height: 2.1rem;
+    padding: 0 .55rem;
+    border-radius: .5rem;
+    border: 1px solid transparent;
+    background: transparent;
+    color: var(--app-text-2);
+    font-size: .85rem;
+    font-weight: 500;
+    display: inline-grid;
+    place-items: center;
+
+    &:hover:not(:disabled):not(.active) {
+      background: var(--app-surface-hover);
+    }
+
+    &.active {
+      background: var(--app-primary);
+      color: #fff;
+    }
+
+    &:disabled {
+      color: var(--app-subtle);
+      cursor: not-allowed;
+    }
+  }
+
+  .page-ellipsis {
+    color: var(--app-subtle);
+    padding: 0 .25rem;
+  }
+}
+
+// ---- Confirm dialog ----
+.app-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1060;
+  background: rgba(15, 23, 42, .5);
+  backdrop-filter: blur(3px);
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  animation: app-fade .15s ease-out;
+}
+
+.app-modal {
+  width: 100%;
+  max-width: 440px;
+  background: var(--app-surface);
+  border: 1px solid var(--app-border);
+  border-radius: 1rem;
+  box-shadow: var(--app-shadow-lg);
+  padding: 1.5rem;
+  animation: app-pop .18s ease-out;
+
+  .modal-icon {
+    width: 3rem;
+    height: 3rem;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    font-size: 1.35rem;
+    margin-bottom: 1rem;
+  }
+
+  .modal-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: .4rem;
+  }
+
+  .modal-message {
+    color: var(--app-muted);
+    font-size: .9rem;
+    margin-bottom: 1.5rem;
+  }
+}
+
+@keyframes app-fade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+// ---- Section heading inside cards/pages ----
+.section-title {
+  font-size: .95rem;
+  font-weight: 600;
+  margin: 0;
+  color: var(--app-text);
+}
+
+.section-eyebrow {
+  font-size: .72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: var(--app-muted);
+}
+
+// ---- Form sections ----
+.form-card {
+  max-width: 860px;
+
+  .form-section {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem 2rem;
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--app-border);
+
+    @media (min-width: 992px) {
+      grid-template-columns: 240px 1fr;
+    }
+
+    &:last-of-type { border-bottom: 0; }
+  }
+
+  .form-section-title {
+    font-weight: 600;
+    font-size: .95rem;
+    margin-bottom: .25rem;
+  }
+
+  .form-section-desc {
+    color: var(--app-muted);
+    font-size: .8125rem;
+    margin: 0;
+  }
+
+  .form-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: .5rem;
+    padding: 1rem 1.5rem;
+    background: var(--app-surface-2);
+    border-top: 1px solid var(--app-border);
+    border-radius: 0 0 var(--bs-border-radius-lg) var(--bs-border-radius-lg);
+  }
+}
+
+// ---- Info callout ----
+.callout {
+  display: flex;
+  align-items: flex-start;
+  gap: .85rem;
+  padding: 1rem 1.15rem;
+  border-radius: var(--bs-border-radius-lg);
+  border: 1px solid transparent;
+
+  .callout-title { font-weight: 600; margin-bottom: .1rem; }
+  .callout-text { font-size: .875rem; opacity: .9; margin: 0; }
+}
+
+.callout-warning { background: var(--tone-warning-bg); color: var(--tone-warning-fg); }
+.callout-info    { background: var(--tone-info-bg);    color: var(--tone-info-fg); }
+.callout-primary { background: var(--tone-primary-bg); color: var(--tone-primary-fg); }
+
+// ---- Thin progress meter with label ----
+.meter {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  min-width: 120px;
+
+  .progress {
+    flex: 1;
+    height: .4rem;
+  }
+
+  .meter-label {
+    font-size: .78rem;
+    color: var(--app-muted);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+}
+
+// ---- Conic progress ring ----
+.ring {
+  --value: 0;
+  --ring-color: var(--app-primary);
+  width: 4.5rem;
+  height: 4.5rem;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: conic-gradient(var(--ring-color) calc(var(--value) * 1%), var(--app-surface-hover) 0);
+  flex-shrink: 0;
+
+  &::before {
+    content: "";
+    grid-area: 1 / 1;
+    width: 76%;
+    height: 76%;
+    border-radius: 50%;
+    background: var(--app-surface);
+  }
+
+  .ring-label {
+    grid-area: 1 / 1;
+    position: relative;
+    font-weight: 700;
+    font-size: .95rem;
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+// ---- Sticky bottom action bar for long editable lists ----
+.sticky-actions {
+  position: sticky;
+  bottom: 1rem;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: .75rem;
+  margin-top: 1rem;
+  padding: .85rem 1.1rem;
+  background: var(--app-surface);
+  border: 1px solid var(--app-border);
+  border-radius: var(--bs-border-radius-lg);
+  box-shadow: var(--app-shadow-md);
+}
+
+// ---- Status segmented control (attendance) ----
+.status-toggle {
+  display: inline-flex;
+  padding: .2rem;
+  border-radius: .6rem;
+  background: var(--app-surface-2);
+  border: 1px solid var(--app-border);
+  gap: .15rem;
+
+  button {
+    border: 0;
+    background: transparent;
+    padding: .35rem .75rem;
+    border-radius: .45rem;
+    font-size: .8125rem;
+    font-weight: 500;
+    color: var(--app-muted);
+    display: inline-flex;
+    align-items: center;
+    gap: .35rem;
+    transition: background-color .12s ease, color .12s ease;
+
+    &:hover { color: var(--app-text); }
+
+    &.is-present { background: var(--tone-success-bg); color: var(--tone-success-fg); }
+    &.is-late    { background: var(--tone-warning-bg); color: var(--tone-warning-fg); }
+    &.is-absent  { background: var(--tone-danger-bg);  color: var(--tone-danger-fg); }
+  }
+}
+
+// ---- Item cards (classes, children) ----
+.item-card {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: var(--app-surface);
+  border: 1px solid var(--app-border);
+  border-radius: var(--bs-border-radius-lg);
+  box-shadow: var(--app-shadow-sm);
+  padding: 1.25rem;
+  transition: box-shadow .2s ease, border-color .2s ease, transform .2s ease;
+  animation: app-fade-up .25s ease-out;
+
+  &:hover {
+    box-shadow: var(--app-shadow-md);
+    border-color: var(--app-border-strong);
+  }
+
+  .item-card-footer {
+    margin-top: auto;
+    padding-top: 1rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: .5rem;
+  }
+}
+
+.meta-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: .45rem;
+
+  li {
+    display: flex;
+    align-items: center;
+    gap: .55rem;
+    color: var(--app-text-2);
+    font-size: .85rem;
+
+    .bi { color: var(--app-subtle); }
+  }
+}
+
+// ---- Feed (announcements) ----
+.feed-item {
+  display: flex;
+  gap: 1rem;
+  padding: 1.15rem 1.25rem;
+  border-bottom: 1px solid var(--app-border);
+
+  &:last-child { border-bottom: 0; }
+
+  .feed-title { font-weight: 600; margin-bottom: .2rem; }
+  .feed-body { color: var(--app-text-2); font-size: .9rem; white-space: pre-line; margin-bottom: .5rem; }
+  .feed-meta { color: var(--app-muted); font-size: .78rem; display: flex; flex-wrap: wrap; gap: .25rem .75rem; align-items: center; }
+}
+
+// ---- Definition rows for summaries ----
+.kv {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: .55rem 0;
+  font-size: .875rem;
+  border-bottom: 1px dashed var(--app-border);
+
+  &:last-child { border-bottom: 0; }
+
+  .kv-label { color: var(--app-muted); }
+  .kv-value { font-weight: 600; font-variant-numeric: tabular-nums; }
+}
+
+// ---- Receipt chip ----
+.receipt-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: .45rem;
+  padding: .35rem .7rem;
+  border-radius: .5rem;
+  border: 1px solid var(--app-border-strong);
+  background: var(--app-surface);
+  color: var(--app-text-2);
+  font-size: .8rem;
+  font-weight: 500;
+  transition: border-color .15s ease, color .15s ease;
+
+  &:hover {
+    border-color: var(--app-primary);
+    color: var(--app-primary);
+  }
+}
+
+// ---- Password field with reveal button ----
+.password-field {
+  position: relative;
+
+  .form-control { padding-right: 2.75rem; }
+
+  .reveal-btn {
+    position: absolute;
+    right: .3rem;
+    top: .3rem;
+    width: 2.1rem;
+    height: calc(100% - .6rem);
+    max-height: 2.1rem;
+    border: 0;
+    border-radius: .4rem;
+    background: transparent;
+    color: var(--app-subtle);
+
+    &:hover { color: var(--app-text); background: var(--app-surface-hover); }
+  }
+
+  .form-control.is-invalid { background-position: right 2.6rem center; }
+}
+
+// ---- Password strength ----
+.strength {
+  display: flex;
+  gap: .3rem;
+  margin-top: .5rem;
+
+  span {
+    flex: 1;
+    height: .25rem;
+    border-radius: 50rem;
+    background: var(--app-surface-hover);
+    transition: background-color .2s ease;
+  }
+}
+
+.fade-in {
+  animation: app-fade-up .25s ease-out;
+}

@@ -1,7 +1,12 @@
-/* Global styles */
-@import "bootstrap/dist/css/bootstrap.min.css";
+/* Global styles - design system entry point.
+   Order matters: brand variables -> Bootstrap -> icons/toasts -> our own layers. */
+@import "styles/variables";
+@import "bootstrap/scss/bootstrap";
+@import "bootstrap-icons/font/bootstrap-icons.css";
 @import "ngx-toastr/toastr";
 
-body {
-  background-color: #f5f6fb;
-}
+@import "styles/tokens";
+@import "styles/base";
+@import "styles/components";
+@import "styles/layout";
+@import "styles/pages";

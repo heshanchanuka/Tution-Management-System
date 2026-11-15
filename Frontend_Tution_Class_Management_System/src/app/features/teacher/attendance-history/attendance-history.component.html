@@ -1,50 +1,68 @@
-<div class="container-fluid px-4 py-4" style="max-width: 680px;">
-  <a [routerLink]="['/teacher/classes', classId, 'attendance']" class="text-decoration-none small">‹ Back to Attendance</a>
+<app-class-header [classId]="classId" [schoolClass]="schoolClass"></app-class-header>
 
-  <h3 class="fw-bold mt-2 mb-4" *ngIf="schoolClass">{{ schoolClass.subject }} — Attendance History</h3>
-
-  <div class="row g-2 align-items-end mb-3">
-    <div class="col-auto">
-      <label class="form-label">From</label>
-      <input type="date" class="form-control" [(ngModel)]="from" />
+<div class="card mb-3">
+  <div class="card-body d-flex flex-wrap align-items-end gap-3">
+    <div>
+      <label class="form-label" for="from">From</label>
+      <input id="from" type="date" class="form-control" [(ngModel)]="from" [max]="to" />
     </div>
-    <div class="col-auto">
-      <label class="form-label">To</label>
-      <input type="date" class="form-control" [(ngModel)]="to" />
+    <div>
+      <label class="form-label" for="to">To</label>
+      <input id="to" type="date" class="form-control" [(ngModel)]="to" [max]="today" />
     </div>
-    <div class="col-auto">
-      <button type="button" class="btn btn-outline-secondary" (click)="load()">Filter</button>
+    <button type="button" class="btn btn-primary" (click)="load()"><i class="bi bi-funnel"></i> Apply</button>
+    <div class="nav-segmented ms-lg-auto">
+      <button *ngFor="let p of presets" type="button" class="nav-link py-1" [class.active]="isPreset(p.days)" (click)="applyPreset(p.days)">
+        {{ p.label }}
+      </button>
     </div>
   </div>
+</div>
 
-  <div class="card border-0 shadow-sm">
-    <div class="table-responsive">
-      <table class="table table-sm mb-0 align-middle">
-        <thead class="table-light">
-          <tr>
-            <th>Date</th>
-            <th>Student</th>
-            <th>Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let record of records">
-            <td>{{ record.date }}</td>
-            <td>{{ record.studentName }}</td>
-            <td>
-              <span class="badge"
-                    [class.bg-success]="record.status === 'PRESENT'"
-                    [class.bg-warning]="record.status === 'LATE'"
-                    [class.bg-danger]="record.status === 'ABSENT'">
-                {{ record.status }}
-              </span>
-            </td>
-          </tr>
-          <tr *ngIf="!loading && records.length === 0">
-            <td colspan="3" class="text-center text-muted py-4">No attendance records in this range.</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+<div class="row g-3 mb-3" *ngIf="!loading && records.length > 0">
+  <div class="col-6 col-lg-3"><app-stat-card label="Sessions" icon="calendar-week" tone="primary" [value]="groups.length"></app-stat-card></div>
+  <div class="col-6 col-lg-3"><app-stat-card label="Attendance rate" icon="graph-up" tone="success" [value]="(rate | number:'1.0-1') + '%'"></app-stat-card></div>
+  <div class="col-6 col-lg-3"><app-stat-card label="Late arrivals" icon="clock" tone="warning" [value]="lateTotal"></app-stat-card></div>
+  <div class="col-6 col-lg-3"><app-stat-card label="Absences" icon="x-circle" tone="danger" [value]="absentTotal"></app-stat-card></div>
+</div>
+
+<div class="card table-card">
+  <app-skeleton-list *ngIf="loading" [rows]="6"></app-skeleton-list>
+
+  <app-empty-state *ngIf="!loading && loadError" icon="wifi-off" tone="danger" title="Couldn't load attendance" message="Check your connection and try again.">
+    <button type="button" class="btn btn-white" (click)="load()"><i class="bi bi-arrow-clockwise"></i> Retry</button>
+  </app-empty-state>
+
+  <app-empty-state *ngIf="!loading && !loadError && records.length === 0" icon="calendar-x"
+                   title="No attendance in this range" message="Try a wider date range, or mark attendance for a session.">
+    <a [routerLink]="['/teacher/classes', classId, 'attendance']" class="btn btn-primary"><i class="bi bi-check2-square"></i> Mark attendance</a>
+  </app-empty-state>
+
+  <div *ngIf="!loading && !loadError && records.length > 0">
+    <section class="day-group" *ngFor="let group of groups">
+      <div class="day-group-header">
+        <span><i class="bi bi-calendar3 me-2 text-muted"></i>{{ group.date | date:'EEEE, d MMM y' }}</span>
+        <span class="d-flex gap-2">
+          <span class="badge-soft tone-success">{{ group.present }} P</span>
+          <span class="badge-soft tone-warning" *ngIf="group.late">{{ group.late }} L</span>
+          <span class="badge-soft tone-danger" *ngIf="group.absent">{{ group.absent }} A</span>
+        </span>
+      </div>
+      <div *ngFor="let record of group.records" class="d-flex flex-wrap align-items-center gap-3 px-3 px-md-4 py-2 border-bottom">
+        <div class="entity flex-grow-1">
+          <app-avatar [name]="record.studentName" size="sm"></app-avatar>
+          <span class="fw-medium">{{ record.studentName }}</span>
+        </div>
+        <span *ngIf="savingId === record.id" class="spinner-border spinner-border-sm text-muted"></span>
+        <div class="status-toggle" role="radiogroup" [attr.aria-label]="'Attendance for ' + record.studentName">
+          <button *ngFor="let s of statuses" type="button" role="radio" [attr.aria-checked]="record.status === s"
+                  [disabled]="savingId === record.id"
+                  [ngClass]="record.status === s ? (s === 'PRESENT' ? 'is-present' : s === 'LATE' ? 'is-late' : 'is-absent') : ''"
+                  (click)="changeStatus(record, s)">
+            {{ s | humanize }}
+          </button>
+        </div>
+      </div>
+    </section>
   </div>
 </div>

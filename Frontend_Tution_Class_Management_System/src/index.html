@@ -2,12 +2,31 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>FrontendTutionClassManagementSystem</title>
+  <title>TCMS · Tuition Class Management</title>
   <base href="/">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Manage tuition classes, attendance, exam marks and fees in one place - for institutes, teachers and parents.">
+  <meta name="theme-color" content="#4f46e5">
   <link rel="icon" type="image/x-icon" href="favicon.ico">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Apply the saved/system colour theme before first paint so there's no light-mode flash. -->
+  <script>
+    (function () {
+      try {
+        var saved = localStorage.getItem('tcms_theme');
+        var dark = saved ? saved === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches;
+        document.documentElement.setAttribute('data-bs-theme', dark ? 'dark' : 'light');
+      } catch (e) {}
+    })();
+  </script>
 </head>
 <body>
-  <app-root></app-root>
+  <app-root>
+    <div style="min-height:100vh;display:grid;place-items:center;font-family:system-ui,sans-serif;color:#64748b;">Loading…</div>
+  </app-root>
 </body>
 </html>

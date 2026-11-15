@@ -1,50 +1,80 @@
-<div class="container-fluid px-4 py-4">
-  <div class="d-flex justify-content-between align-items-center mb-3">
-    <h3 class="fw-bold mb-0">Students</h3>
-    <a routerLink="new" class="btn btn-primary btn-sm">+ Add Student</a>
-  </div>
+<app-page-header title="Students" subtitle="Every student registered at the institute.">
+  <a routerLink="new" class="btn btn-primary"><i class="bi bi-plus-lg"></i> Add student</a>
+</app-page-header>
 
-  <div class="input-group mb-3" style="max-width: 320px;">
-    <input
-      type="text"
-      class="form-control"
-      placeholder="Search by name…"
-      [(ngModel)]="searchTerm"
-      (keyup.enter)="search()"
-    />
-    <button class="btn btn-outline-secondary" type="button" (click)="search()">Search</button>
-  </div>
-
-  <div class="card border-0 shadow-sm">
-    <div class="table-responsive">
-      <table class="table table-hover mb-0 align-middle">
-        <thead class="table-light">
-          <tr>
-            <th>Full Name</th>
-            <th>Date of Birth</th>
-            <th>Grade</th>
-            <th>Parent</th>
-            <th class="text-end">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let student of students">
-            <td>{{ student.fullName }}</td>
-            <td>{{ student.dateOfBirth || '—' }}</td>
-            <td>{{ student.gradeLevel }}</td>
-            <td>{{ student.parentName }}</td>
-            <td class="text-end">
-              <a [routerLink]="[student.id, 'edit']" class="btn btn-sm btn-outline-primary me-2">Edit</a>
-              <button type="button" class="btn btn-sm btn-outline-danger" (click)="delete(student)">Delete</button>
-            </td>
-          </tr>
-          <tr *ngIf="!loading && students.length === 0">
-            <td colspan="5" class="text-center text-muted py-4">No students found.</td>
-          </tr>
-        </tbody>
-      </table>
+<div class="card table-card">
+  <div class="table-toolbar">
+    <div class="search-box">
+      <app-search-input placeholder="Search students by name…" [value]="searchTerm" (search)="search($event)"></app-search-input>
     </div>
+    <span class="small text-muted" *ngIf="!loading">{{ totalElements }} student{{ totalElements === 1 ? '' : 's' }}</span>
   </div>
 
-  <app-pagination [page]="page" [totalPages]="totalPages" (pageChange)="onPageChange($event)"></app-pagination>
+  <app-skeleton-list *ngIf="loading"></app-skeleton-list>
+
+  <app-empty-state *ngIf="!loading && loadError" icon="wifi-off" tone="danger" title="Couldn't load students"
+                   message="Check your connection and try again.">
+    <button type="button" class="btn btn-white" (click)="load()"><i class="bi bi-arrow-clockwise"></i> Retry</button>
+  </app-empty-state>
+
+  <app-empty-state *ngIf="!loading && !loadError && students.length === 0"
+                   [icon]="searchTerm ? 'search' : 'backpack'"
+                   [title]="searchTerm ? 'No matching students' : 'No students yet'"
+                   [message]="searchTerm ? 'Try a different name.' : 'Add a student and link them to a parent account.'">
+    <a *ngIf="!searchTerm" routerLink="new" class="btn btn-primary"><i class="bi bi-plus-lg"></i> Add student</a>
+  </app-empty-state>
+
+  <div class="table-responsive" *ngIf="!loading && !loadError && students.length > 0">
+    <table class="table table-hover align-middle">
+      <thead>
+        <tr>
+          <th>Student</th>
+          <th>Grade</th>
+          <th class="d-none d-md-table-cell">Date of birth</th>
+          <th class="d-none d-lg-table-cell">Parent</th>
+          <th class="table-actions"><span class="visually-hidden">Actions</span></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let student of students">
+          <td>
+            <div class="entity">
+              <app-avatar [name]="student.fullName"></app-avatar>
+              <div class="min-w-0">
+                <div class="entity-name">{{ student.fullName }}</div>
+                <div class="entity-meta d-lg-none">{{ student.parentName }}</div>
+              </div>
+            </div>
+          </td>
+          <td><span class="badge-soft tone-neutral">{{ student.gradeLevel }}</span></td>
+          <td class="d-none d-md-table-cell">
+            <ng-container *ngIf="student.dateOfBirth; else dash">
+              {{ student.dateOfBirth | date:'d MMM y' }}
+              <span class="text-muted small" *ngIf="age(student.dateOfBirth) !== null">· {{ age(student.dateOfBirth) }} yrs</span>
+            </ng-container>
+          </td>
+          <td class="d-none d-lg-table-cell">
+            <a [routerLink]="['/admin/parents', student.parentId, 'edit']" class="d-inline-flex align-items-center gap-2 text-reset">
+              <i class="bi bi-person text-muted"></i>{{ student.parentName }}
+            </a>
+          </td>
+          <td class="table-actions">
+            <a [routerLink]="[student.id, 'edit']" class="btn btn-icon btn-icon-primary" title="Edit" [attr.aria-label]="'Edit ' + student.fullName">
+              <i class="bi bi-pencil"></i>
+            </a>
+            <button type="button" class="btn btn-icon btn-icon-danger" title="Remove" [attr.aria-label]="'Remove ' + student.fullName" (click)="delete(student)">
+              <i class="bi bi-trash3"></i>
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="table-footer" *ngIf="!loading && totalPages > 1">
+    <app-pagination [page]="page" [totalPages]="totalPages" [totalElements]="totalElements" [pageSize]="pageSize"
+                    (pageChange)="onPageChange($event)"></app-pagination>
+  </div>
 </div>
+
+<ng-template #dash><span class="text-muted">—</span></ng-template>

@@ -1,32 +1,104 @@
-<div class="container-fluid px-4 py-4">
-  <h3 class="fw-bold mb-4">Reports</h3>
+<app-page-header title="Reports" subtitle="Revenue, attendance and exam performance across the institute."></app-page-header>
+
+<app-empty-state *ngIf="failed" icon="wifi-off" tone="danger" title="Couldn't load reports"
+                 message="Check your connection and refresh the page."></app-empty-state>
+
+<ng-container *ngIf="!failed">
+  <!-- KPIs -->
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-xl-3">
+      <app-stat-card [label]="'Revenue · last ' + months + ' months'" icon="cash-stack" tone="success"
+                     [value]="revenueTotal | lkr:0" [loading]="loading"></app-stat-card>
+    </div>
+    <div class="col-6 col-xl-3">
+      <app-stat-card label="Average per month" icon="graph-up" tone="primary" [value]="revenueAverage | lkr:0"
+                     [hint]="bestMonth ? 'Best: ' + monthLabel(bestMonth.month) : null" [loading]="loading"></app-stat-card>
+    </div>
+    <div class="col-6 col-xl-3">
+      <app-stat-card label="Attendance rate" icon="calendar2-check" tone="info"
+                     [value]="(attendanceRate | number:'1.0-1') + '%'" [hint]="attendanceTotal + ' records (present + late)'"
+                     [loading]="loading"></app-stat-card>
+    </div>
+    <div class="col-6 col-xl-3">
+      <app-stat-card label="Average exam score" icon="mortarboard" tone="violet"
+                     [value]="(examAverage | number:'1.0-1') + '%'" [hint]="topClass ? 'Top: ' + topClass.subject : null"
+                     [loading]="loading"></app-stat-card>
+    </div>
+  </div>
 
   <div class="row g-3">
-    <div class="col-lg-6">
-      <div class="card border-0 shadow-sm">
+    <!-- Revenue -->
+    <div class="col-xl-8">
+      <div class="card h-100">
+        <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
+          <div>
+            <h2 class="card-title">Revenue</h2>
+            <div class="card-subtitle-muted">Payments received per month</div>
+          </div>
+          <div class="nav-segmented" role="tablist" aria-label="Time range">
+            <button *ngFor="let m of monthOptions" type="button" class="nav-link py-1 px-2" [class.active]="months === m" (click)="changeMonths(m)">
+              {{ m }}M
+            </button>
+          </div>
+        </div>
         <div class="card-body">
-          <h6 class="fw-semibold mb-3">Revenue — last 6 months</h6>
-          <canvas #revenueCanvas></canvas>
+          <span class="skeleton" *ngIf="loading || loadingRevenue" style="height: 300px"></span>
+          <app-empty-state *ngIf="!loading && !loadingRevenue && revenueTotal === 0" icon="bar-chart" [compact]="true"
+                           title="No revenue in this period" message="Recorded payments will show up here."></app-empty-state>
+          <div class="chart-box" [hidden]="loading || loadingRevenue || revenueTotal === 0" style="height: 300px">
+            <canvas #revenueCanvas role="img" aria-label="Revenue per month bar chart"></canvas>
+          </div>
         </div>
       </div>
     </div>
 
-    <div class="col-lg-6">
-      <div class="card border-0 shadow-sm">
+    <!-- Attendance -->
+    <div class="col-xl-4">
+      <div class="card h-100">
+        <div class="card-header">
+          <h2 class="card-title">Attendance breakdown</h2>
+          <div class="card-subtitle-muted">All sessions, all time</div>
+        </div>
         <div class="card-body">
-          <h6 class="fw-semibold mb-3">Attendance Breakdown (all time)</h6>
-          <canvas #attendanceCanvas></canvas>
+          <span class="skeleton mx-auto" *ngIf="loading" style="height: 240px; width: 240px; border-radius: 50%"></span>
+          <app-empty-state *ngIf="!loading && attendanceTotal === 0" icon="calendar-x" [compact]="true"
+                           title="No attendance yet" message="Once teachers mark attendance you'll see the split here."></app-empty-state>
+          <div class="position-relative" [hidden]="loading || attendanceTotal === 0">
+            <div class="chart-box" style="height: 260px">
+              <canvas #attendanceCanvas role="img" aria-label="Attendance breakdown doughnut chart"></canvas>
+            </div>
+            <div class="position-absolute text-center" style="top: 42%; left: 50%; transform: translate(-50%, -50%); pointer-events: none">
+              <div class="fs-3 fw-bold tabular-nums">{{ attendanceRate | number:'1.0-0' }}%</div>
+              <div class="small text-muted">attended</div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
 
-    <div class="col-lg-12">
-      <div class="card border-0 shadow-sm">
+    <!-- Exams -->
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
+          <div>
+            <h2 class="card-title">Exam performance by class</h2>
+            <div class="card-subtitle-muted">Average score across all exams in each class</div>
+          </div>
+          <div class="d-flex gap-3 small text-muted">
+            <span><span class="badge-soft tone-success px-1 py-0 me-1">&nbsp;</span>75%+</span>
+            <span><span class="badge-soft tone-info px-1 py-0 me-1">&nbsp;</span>50-75%</span>
+            <span><span class="badge-soft tone-warning px-1 py-0 me-1">&nbsp;</span>Below 50%</span>
+          </div>
+        </div>
         <div class="card-body">
-          <h6 class="fw-semibold mb-3">Average Exam Performance by Class</h6>
-          <canvas #examCanvas></canvas>
+          <span class="skeleton" *ngIf="loading" style="height: 260px"></span>
+          <app-empty-state *ngIf="!loading && exams.length === 0" icon="journal-x" [compact]="true"
+                           title="No exam results yet" message="Averages appear once teachers enter marks."></app-empty-state>
+          <div class="chart-box" [hidden]="loading || exams.length === 0" [style.height.px]="Math.max(220, exams.length * 44)">
+            <canvas #examCanvas role="img" aria-label="Average exam score per class bar chart"></canvas>
+          </div>
         </div>
       </div>
     </div>
   </div>
-</div>
+</ng-container>

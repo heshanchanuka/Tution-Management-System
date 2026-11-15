@@ -8,12 +8,13 @@ import { ForbiddenComponent } from './shared/components/forbidden/forbidden.comp
 import { NotFoundComponent } from './shared/components/not-found/not-found.component';
 
 import { AuthGuard } from './core/guards/auth.guard';
+import { GuestGuard } from './core/guards/guest.guard';
 
 const routes: Routes = [
   { path: '', redirectTo: 'home', pathMatch: 'full' },
-  { path: 'home', component: HomeComponent },
-  { path: 'login', component: LoginComponent },
-  { path: 'register', component: RegisterComponent },
+  { path: 'home', component: HomeComponent, title: 'TCMS · Tuition Class Management' },
+  { path: 'login', component: LoginComponent, canActivate: [GuestGuard], title: 'Sign in · TCMS' },
+  { path: 'register', component: RegisterComponent, canActivate: [GuestGuard], title: 'Create an account · TCMS' },
 
   {
     path: 'admin',
@@ -34,12 +35,12 @@ const routes: Routes = [
     data: { roles: ['PARENT'] }
   },
 
-  { path: 'forbidden', component: ForbiddenComponent },
-  { path: '**', component: NotFoundComponent }
+  { path: 'forbidden', component: ForbiddenComponent, title: 'Access denied · TCMS' },
+  { path: '**', component: NotFoundComponent, title: 'Page not found · TCMS' }
 ];
 
 @NgModule({
-  imports: [RouterModule.forRoot(routes)],
+  imports: [RouterModule.forRoot(routes, { scrollPositionRestoration: 'top', anchorScrolling: 'enabled' })],
   exports: [RouterModule]
 })
 export class AppRoutingModule {

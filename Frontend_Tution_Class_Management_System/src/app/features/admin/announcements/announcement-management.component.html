@@ -1,62 +1,102 @@
-<div class="container-fluid px-4 py-4">
-  <h3 class="fw-bold mb-4">Announcements</h3>
+<app-page-header title="Announcements" subtitle="Keep parents informed - post to everyone or to a single class."></app-page-header>
 
-  <div class="card border-0 shadow-sm mb-4">
-    <div class="card-body">
-      <h6 class="fw-semibold mb-3">Post a New Announcement</h6>
-      <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+<div class="row g-3">
+  <!-- Composer -->
+  <div class="col-lg-5 col-xl-4">
+    <form class="card" style="position: sticky; top: calc(var(--app-topbar-height) + 1rem)" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+      <div class="card-header d-flex align-items-center gap-2">
+        <span class="icon-tile icon-tile-sm tone-violet"><i class="bi bi-megaphone"></i></span>
+        <h2 class="card-title">New announcement</h2>
+      </div>
+      <div class="card-body">
         <div class="mb-3">
-          <label class="form-label">Title</label>
-          <input type="text" class="form-control" formControlName="title" />
+          <label class="form-label required" for="title">Title</label>
+          <input id="title" type="text" class="form-control" formControlName="title" [maxlength]="titleMax"
+                 placeholder="e.g. Classes cancelled on Poya day" [class.is-invalid]="f['title'].invalid && f['title'].touched" />
+          <div class="invalid-feedback">A title is required.</div>
         </div>
         <div class="mb-3">
-          <label class="form-label">Message</label>
-          <textarea class="form-control" rows="3" formControlName="message"></textarea>
+          <div class="d-flex justify-content-between">
+            <label class="form-label required" for="message">Message</label>
+            <span class="small" [ngClass]="(f['message'].value?.length || 0) > messageMax * .9 ? 'text-tone-warning' : 'text-muted'">
+              {{ f['message'].value?.length || 0 }}/{{ messageMax }}
+            </span>
+          </div>
+          <textarea id="message" class="form-control" rows="5" formControlName="message" [maxlength]="messageMax"
+                    placeholder="Write the details parents need to know…"
+                    [class.is-invalid]="f['message'].invalid && f['message'].touched"></textarea>
+          <div class="invalid-feedback">A message is required.</div>
         </div>
-        <div class="mb-3" style="max-width: 360px;">
-          <label class="form-label">Audience</label>
-          <select class="form-select" formControlName="targetClassId">
-            <option [ngValue]="null">Everyone (broadcast)</option>
-            <option *ngFor="let cls of classes" [ngValue]="cls.id">Only {{ cls.subject }} - {{ cls.gradeLevel }} parents</option>
+        <div class="mb-3">
+          <label class="form-label" for="audience">Audience</label>
+          <select id="audience" class="form-select" formControlName="targetClassId">
+            <option [ngValue]="null">Everyone (all parents)</option>
+            <option *ngFor="let cls of classes" [ngValue]="cls.id">{{ cls.subject }} · {{ cls.gradeLevel }} parents</option>
           </select>
+          <div class="form-text">
+            <i class="bi" [ngClass]="targetClass ? 'bi-people' : 'bi-globe2'"></i>
+            {{ targetClass ? 'Only parents of students in ' + targetClass.subject + ' (' + targetClass.enrolledCount + ' enrolled) will see this.' : 'Every parent will see this.' }}
+          </div>
         </div>
-        <button type="submit" class="btn btn-primary" [disabled]="submitting">Post Announcement</button>
-      </form>
-    </div>
+        <div class="mb-1">
+          <label class="form-label" for="expiresOn">Show until <span class="text-muted fw-normal">(optional)</span></label>
+          <input id="expiresOn" type="date" class="form-control" formControlName="expiresOn" [min]="today" />
+          <div class="form-text">After this date parents won't see it any more.</div>
+        </div>
+      </div>
+      <div class="card-footer d-flex justify-content-end" style="background: var(--app-surface-2)">
+        <button type="submit" class="btn btn-primary" [disabled]="submitting">
+          <span *ngIf="submitting" class="spinner-border spinner-border-sm"></span>
+          <i *ngIf="!submitting" class="bi bi-send"></i> Post announcement
+        </button>
+      </div>
+    </form>
   </div>
 
-  <div class="card border-0 shadow-sm">
-    <div class="table-responsive">
-      <table class="table table-hover mb-0 align-middle">
-        <thead class="table-light">
-          <tr>
-            <th>Title</th>
-            <th>Message</th>
-            <th>Audience</th>
-            <th>Posted</th>
-            <th class="text-end">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let announcement of announcements">
-            <td>{{ announcement.title }}</td>
-            <td class="text-truncate" style="max-width: 300px;">{{ announcement.message }}</td>
-            <td>
-              <span class="badge bg-secondary" *ngIf="!announcement.targetClassId">Everyone</span>
-              <span class="badge bg-info" *ngIf="announcement.targetClassId">{{ announcement.targetClassSubject }}</span>
-            </td>
-            <td>{{ announcement.postedAt | date:'medium' }}</td>
-            <td class="text-end">
-              <button type="button" class="btn btn-sm btn-outline-danger" (click)="delete(announcement)">Delete</button>
-            </td>
-          </tr>
-          <tr *ngIf="!loading && announcements.length === 0">
-            <td colspan="5" class="text-center text-muted py-4">No announcements posted yet.</td>
-          </tr>
-        </tbody>
-      </table>
+  <!-- Feed -->
+  <div class="col-lg-7 col-xl-8">
+    <div class="card table-card">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h2 class="card-title">Posted</h2>
+        <span class="small text-muted" *ngIf="!loading">{{ totalElements }} total</span>
+      </div>
+
+      <app-skeleton-list *ngIf="loading" [rows]="4"></app-skeleton-list>
+      <app-empty-state *ngIf="!loading && announcements.length === 0" icon="megaphone" tone="violet"
+                       title="No announcements yet" message="Your first announcement will appear here."></app-empty-state>
+
+      <div *ngIf="!loading">
+        <article class="feed-item fade-in" *ngFor="let a of announcements" [style.opacity]="isExpired(a) ? .6 : 1">
+          <span class="icon-tile" [ngClass]="a.targetClassId ? 'tone-info' : 'tone-violet'">
+            <i class="bi" [ngClass]="a.targetClassId ? 'bi-people' : 'bi-megaphone'"></i>
+          </span>
+          <div class="flex-grow-1 min-w-0">
+            <div class="d-flex justify-content-between align-items-start gap-2">
+              <div class="feed-title">{{ a.title }}</div>
+              <button type="button" class="btn btn-icon btn-icon-danger flex-shrink-0 mt-n1" title="Delete"
+                      [attr.aria-label]="'Delete ' + a.title" (click)="delete(a)">
+                <i class="bi bi-trash3"></i>
+              </button>
+            </div>
+            <div class="feed-body">{{ a.message }}</div>
+            <div class="feed-meta">
+              <span class="badge-soft" [ngClass]="a.targetClassId ? 'tone-info' : 'tone-violet'">
+                {{ a.targetClassId ? a.targetClassSubject : 'Everyone' }}
+              </span>
+              <span><i class="bi bi-person me-1"></i>{{ a.postedByName }}</span>
+              <span [title]="a.postedAt | date:'medium'"><i class="bi bi-clock me-1"></i>{{ a.postedAt | timeAgo }}</span>
+              <span *ngIf="a.expiresAt" [ngClass]="isExpired(a) ? 'text-tone-danger' : ''">
+                <i class="bi bi-hourglass-split me-1"></i>{{ isExpired(a) ? 'Expired' : 'Until' }} {{ a.expiresAt | date:'d MMM y' }}
+              </span>
+            </div>
+          </div>
+        </article>
+      </div>
+
+      <div class="table-footer" *ngIf="!loading && totalPages > 1">
+        <app-pagination [page]="page" [totalPages]="totalPages" [totalElements]="totalElements" [pageSize]="pageSize"
+                        (pageChange)="onPageChange($event)"></app-pagination>
+      </div>
     </div>
   </div>
-
-  <app-pagination [page]="page" [totalPages]="totalPages" (pageChange)="onPageChange($event)"></app-pagination>
 </div>

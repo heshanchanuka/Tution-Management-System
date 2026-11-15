@@ -1,7 +1,6 @@
 import { NgModule } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { RouterModule, Routes } from '@angular/router';
+import { SharedModule } from '../../shared/shared.module';
 
 import { TeacherShellComponent } from './teacher-shell/teacher-shell.component';
 import { TeacherDashboardComponent } from './dashboard/teacher-dashboard.component';
@@ -10,6 +9,7 @@ import { ClassStudentsComponent } from './class-students/class-students.componen
 import { AttendanceMarkingComponent } from './attendance-marking/attendance-marking.component';
 import { AttendanceHistoryComponent } from './attendance-history/attendance-history.component';
 import { MarksEntryComponent } from './marks-entry/marks-entry.component';
+import { ClassHeaderComponent } from './class-header/class-header.component';
 
 const routes: Routes = [
   {
@@ -17,12 +17,12 @@ const routes: Routes = [
     component: TeacherShellComponent,
     children: [
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
-      { path: 'dashboard', component: TeacherDashboardComponent },
-      { path: 'classes', component: MyClassesComponent },
-      { path: 'classes/:id/students', component: ClassStudentsComponent },
-      { path: 'classes/:id/attendance', component: AttendanceMarkingComponent },
-      { path: 'classes/:id/attendance/history', component: AttendanceHistoryComponent },
-      { path: 'classes/:id/marks', component: MarksEntryComponent }
+      { path: 'dashboard', component: TeacherDashboardComponent, data: { title: 'Dashboard' } },
+      { path: 'classes', component: MyClassesComponent, data: { title: 'My classes' } },
+      { path: 'classes/:id/students', component: ClassStudentsComponent, data: { title: 'Class roster' } },
+      { path: 'classes/:id/attendance', component: AttendanceMarkingComponent, data: { title: 'Mark attendance' } },
+      { path: 'classes/:id/attendance/history', component: AttendanceHistoryComponent, data: { title: 'Attendance history' } },
+      { path: 'classes/:id/marks', component: MarksEntryComponent, data: { title: 'Exams & marks' } }
     ]
   }
 ];
@@ -35,14 +35,10 @@ const routes: Routes = [
     ClassStudentsComponent,
     AttendanceMarkingComponent,
     AttendanceHistoryComponent,
-    MarksEntryComponent
+    MarksEntryComponent,
+    ClassHeaderComponent
   ],
-  imports: [
-    CommonModule,
-    FormsModule,
-    ReactiveFormsModule,
-    RouterModule.forChild(routes)
-  ]
+  imports: [SharedModule, RouterModule.forChild(routes)]
 })
 export class TeacherModule {
 }

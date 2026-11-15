@@ -1,52 +1,75 @@
-<div class="container-fluid px-4 py-4">
-  <div class="d-flex justify-content-between align-items-center mb-3">
-    <h3 class="fw-bold mb-0">Teachers</h3>
-    <a routerLink="new" class="btn btn-primary btn-sm">+ Add Teacher</a>
-  </div>
+<app-page-header title="Teachers" subtitle="Everyone who teaches at the institute.">
+  <a routerLink="new" class="btn btn-primary"><i class="bi bi-plus-lg"></i> Add teacher</a>
+</app-page-header>
 
-  <div class="input-group mb-3" style="max-width: 320px;">
-    <input
-      type="text"
-      class="form-control"
-      placeholder="Search by name…"
-      [(ngModel)]="searchTerm"
-      (keyup.enter)="search()"
-    />
-    <button class="btn btn-outline-secondary" type="button" (click)="search()">Search</button>
-  </div>
-
-  <div class="card border-0 shadow-sm">
-    <div class="table-responsive">
-      <table class="table table-hover mb-0 align-middle">
-        <thead class="table-light">
-          <tr>
-            <th>Username</th>
-            <th>Full Name</th>
-            <th>Phone</th>
-            <th>Subject</th>
-            <th>Qualifications</th>
-            <th class="text-end">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let teacher of teachers">
-            <td>{{ teacher.username }}</td>
-            <td>{{ teacher.fullName }}</td>
-            <td>{{ teacher.phone || '—' }}</td>
-            <td>{{ teacher.subjectSpecialty || '—' }}</td>
-            <td>{{ teacher.qualifications || '—' }}</td>
-            <td class="text-end">
-              <a [routerLink]="[teacher.id, 'edit']" class="btn btn-sm btn-outline-primary me-2">Edit</a>
-              <button type="button" class="btn btn-sm btn-outline-danger" (click)="delete(teacher)">Delete</button>
-            </td>
-          </tr>
-          <tr *ngIf="!loading && teachers.length === 0">
-            <td colspan="6" class="text-center text-muted py-4">No teachers found.</td>
-          </tr>
-        </tbody>
-      </table>
+<div class="card table-card">
+  <div class="table-toolbar">
+    <div class="search-box">
+      <app-search-input placeholder="Search teachers by name…" [value]="searchTerm" (search)="search($event)"></app-search-input>
     </div>
+    <span class="small text-muted" *ngIf="!loading">{{ totalElements }} teacher{{ totalElements === 1 ? '' : 's' }}</span>
   </div>
 
-  <app-pagination [page]="page" [totalPages]="totalPages" (pageChange)="onPageChange($event)"></app-pagination>
+  <app-skeleton-list *ngIf="loading"></app-skeleton-list>
+
+  <app-empty-state *ngIf="!loading && loadError" icon="wifi-off" tone="danger" title="Couldn't load teachers"
+                   message="Check your connection and try again.">
+    <button type="button" class="btn btn-white" (click)="load()"><i class="bi bi-arrow-clockwise"></i> Retry</button>
+  </app-empty-state>
+
+  <app-empty-state *ngIf="!loading && !loadError && teachers.length === 0"
+                   [icon]="searchTerm ? 'search' : 'easel'"
+                   [title]="searchTerm ? 'No matching teachers' : 'No teachers yet'"
+                   [message]="searchTerm ? 'Try a different name.' : 'Add your first teacher to start assigning classes.'">
+    <a *ngIf="!searchTerm" routerLink="new" class="btn btn-primary"><i class="bi bi-plus-lg"></i> Add teacher</a>
+  </app-empty-state>
+
+  <div class="table-responsive" *ngIf="!loading && !loadError && teachers.length > 0">
+    <table class="table table-hover align-middle">
+      <thead>
+        <tr>
+          <th>Teacher</th>
+          <th>Subject</th>
+          <th class="d-none d-lg-table-cell">Qualifications</th>
+          <th class="d-none d-md-table-cell">Phone</th>
+          <th class="d-none d-xl-table-cell">Joined</th>
+          <th class="table-actions"><span class="visually-hidden">Actions</span></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let teacher of teachers">
+          <td>
+            <div class="entity">
+              <app-avatar [name]="teacher.fullName"></app-avatar>
+              <div class="min-w-0">
+                <div class="entity-name">{{ teacher.fullName }}</div>
+                <div class="entity-meta">&#64;{{ teacher.username }}</div>
+              </div>
+            </div>
+          </td>
+          <td>
+            <span class="badge-soft tone-primary" *ngIf="teacher.subjectSpecialty; else dash">{{ teacher.subjectSpecialty }}</span>
+          </td>
+          <td class="d-none d-lg-table-cell text-muted">{{ teacher.qualifications || '—' }}</td>
+          <td class="d-none d-md-table-cell tabular-nums">{{ teacher.phone || '—' }}</td>
+          <td class="d-none d-xl-table-cell text-muted">{{ teacher.joinedDate ? (teacher.joinedDate | date:'d MMM y') : '—' }}</td>
+          <td class="table-actions">
+            <a [routerLink]="[teacher.id, 'edit']" class="btn btn-icon btn-icon-primary" title="Edit" [attr.aria-label]="'Edit ' + teacher.fullName">
+              <i class="bi bi-pencil"></i>
+            </a>
+            <button type="button" class="btn btn-icon btn-icon-danger" title="Remove" [attr.aria-label]="'Remove ' + teacher.fullName" (click)="delete(teacher)">
+              <i class="bi bi-trash3"></i>
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="table-footer" *ngIf="!loading && totalPages > 1">
+    <app-pagination [page]="page" [totalPages]="totalPages" [totalElements]="totalElements" [pageSize]="pageSize"
+                    (pageChange)="onPageChange($event)"></app-pagination>
+  </div>
 </div>
+
+<ng-template #dash><span class="text-muted">—</span></ng-template>

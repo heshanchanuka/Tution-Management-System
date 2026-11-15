@@ -1,17 +1,15 @@
 import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-import { ReactiveFormsModule } from '@angular/forms';
 import { HTTP_INTERCEPTORS, HttpClientModule } from '@angular/common/http';
 import { ToastrModule } from 'ngx-toastr';
 
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
+import { SharedModule } from './shared/shared.module';
 
-import { HeaderComponent } from './shared/components/header/header.component';
 import { ForbiddenComponent } from './shared/components/forbidden/forbidden.component';
 import { NotFoundComponent } from './shared/components/not-found/not-found.component';
-
 import { HomeComponent } from './features/home/home.component';
 import { LoginComponent } from './features/auth/login/login.component';
 import { RegisterComponent } from './features/auth/register/register.component';
@@ -21,7 +19,6 @@ import { AuthInterceptor } from './core/interceptors/auth.interceptor';
 @NgModule({
   declarations: [
     AppComponent,
-    HeaderComponent,
     ForbiddenComponent,
     NotFoundComponent,
     HomeComponent,
@@ -32,12 +29,15 @@ import { AuthInterceptor } from './core/interceptors/auth.interceptor';
     BrowserModule,
     BrowserAnimationsModule,
     AppRoutingModule,
-    ReactiveFormsModule,
     HttpClientModule,
+    SharedModule,
     ToastrModule.forRoot({
-      timeOut: 3000,
+      timeOut: 4000,
       positionClass: 'toast-top-right',
-      preventDuplicates: true
+      preventDuplicates: true,
+      progressBar: false,
+      closeButton: false,
+      newestOnTop: true
     })
   ],
   providers: [

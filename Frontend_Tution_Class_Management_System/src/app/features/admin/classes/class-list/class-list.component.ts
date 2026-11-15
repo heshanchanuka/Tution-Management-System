@@ -6,16 +6,18 @@ import { ConfirmService } from '../../../../shared/services/confirm.service';
 
 @Component({
   selector: 'app-class-list',
-  templateUrl: './class-list.component.html',
-  styleUrls: ['./class-list.component.scss']
+  templateUrl: './class-list.component.html'
 })
 export class ClassListComponent implements OnInit {
 
   classes: ClassResponse[] = [];
   page = 0;
+  readonly pageSize = 10;
   totalPages = 0;
+  totalElements = 0;
   searchTerm = '';
-  loading = false;
+  loading = true;
+  loadError = false;
 
   constructor(
     private classService: ClassService,
@@ -30,20 +32,23 @@ export class ClassListComponent implements OnInit {
 
   load(): void {
     this.loading = true;
-    this.classService.list(this.page, 10, this.searchTerm).subscribe({
+    this.loadError = false;
+    this.classService.list(this.page, this.pageSize, this.searchTerm).subscribe({
       next: (result) => {
         this.classes = result.content;
         this.totalPages = result.totalPages;
+        this.totalElements = result.totalElements;
         this.loading = false;
       },
       error: () => {
         this.loading = false;
-        this.toastr.error('Could not load classes');
+        this.loadError = true;
       }
     });
   }
 
-  search(): void {
+  search(term: string): void {
+    this.searchTerm = term;
     this.page = 0;
     this.load();
   }
@@ -53,18 +58,35 @@ export class ClassListComponent implements OnInit {
     this.load();
   }
 
-  delete(schoolClass: ClassResponse): void {
-    if (!this.confirmService.confirm(`Delete class "${schoolClass.subject} - ${schoolClass.gradeLevel}"? This cannot be undone.`)) {
+  fillTone(cls: ClassResponse): string {
+    const ratio = cls.capacity ? cls.enrolledCount / cls.capacity : 0;
+    if (ratio >= 1) {
+      return 'bg-danger';
+    }
+    if (ratio >= .8) {
+      return 'bg-warning';
+    }
+    return 'bg-success';
+  }
+
+  async delete(schoolClass: ClassResponse): Promise<void> {
+    const ok = await this.confirmService.ask({
+      title: `Delete ${schoolClass.subject} (${schoolClass.gradeLevel})?`,
+      message: 'The class and its enrolments will be removed. Classes with attendance, exams or invoices may not be deletable.',
+      confirmText: 'Delete class'
+    });
+    if (!ok) {
       return;
     }
     this.classService.delete(schoolClass.id).subscribe({
       next: () => {
         this.toastr.success('Class deleted');
+        if (this.classes.length === 1 && this.page > 0) {
+          this.page--;
+        }
         this.load();
       },
-      error: (err) => {
-        this.toastr.error(err?.error?.message ?? 'Could not delete class');
-      }
+      error: (err) => this.toastr.error(err?.error?.message ?? 'Could not delete class')
     });
   }
 }

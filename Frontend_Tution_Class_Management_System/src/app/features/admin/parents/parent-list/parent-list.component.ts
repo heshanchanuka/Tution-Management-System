@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
 import { ParentService } from '../../../../core/services/parent.service';
 import { ParentResponse } from '../../../../core/models/admin.models';
@@ -9,26 +9,28 @@ type ParentTab = 'all' | 'pending';
 
 @Component({
   selector: 'app-parent-list',
-  templateUrl: './parent-list.component.html',
-  styleUrls: ['./parent-list.component.scss']
+  templateUrl: './parent-list.component.html'
 })
 export class ParentListComponent implements OnInit {
 
   activeTab: ParentTab = 'all';
+  readonly pageSize = 10;
 
   // All parents
   parents: ParentResponse[] = [];
   page = 0;
   totalPages = 0;
+  totalElements = 0;
   searchTerm = '';
-  loading = false;
+  loading = true;
+  loadError = false;
 
   // Pending self-registrations
   pending: ParentResponse[] = [];
   pendingPage = 0;
   pendingTotalPages = 0;
   pendingTotal = 0;
-  loadingPending = false;
+  loadingPending = true;
   /** Id of the pending row whose approve/reject request is in flight. */
   actingOnId: number | null = null;
 
@@ -36,7 +38,8 @@ export class ParentListComponent implements OnInit {
     private parentService: ParentService,
     private confirmService: ConfirmService,
     private toastr: ToastrService,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private router: Router
   ) {
   }
 
@@ -50,24 +53,34 @@ export class ParentListComponent implements OnInit {
 
   selectTab(tab: ParentTab): void {
     this.activeTab = tab;
+    // Keep the tab in the URL so refresh/back keeps the user where they were.
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { tab: tab === 'pending' ? 'pending' : null },
+      queryParamsHandling: 'merge',
+      replaceUrl: true
+    });
   }
 
   load(): void {
     this.loading = true;
-    this.parentService.list(this.page, 10, this.searchTerm).subscribe({
+    this.loadError = false;
+    this.parentService.list(this.page, this.pageSize, this.searchTerm).subscribe({
       next: (result) => {
         this.parents = result.content;
         this.totalPages = result.totalPages;
+        this.totalElements = result.totalElements;
         this.loading = false;
       },
       error: () => {
         this.loading = false;
-        this.toastr.error('Could not load parents');
+        this.loadError = true;
       }
     });
   }
 
-  search(): void {
+  search(term: string): void {
+    this.searchTerm = term;
     this.page = 0;
     this.load();
   }
@@ -77,21 +90,27 @@ export class ParentListComponent implements OnInit {
     this.load();
   }
 
-  delete(parent: ParentResponse): void {
-    if (!this.confirmService.confirm(`Remove parent "${parent.fullName}"? This cannot be undone.`)) {
+  async delete(parent: ParentResponse): Promise<void> {
+    const ok = await this.confirmService.ask({
+      title: `Remove ${parent.fullName}?`,
+      message: 'Their account will be deleted. Parents who still have students linked to them can\'t be removed.',
+      confirmText: 'Remove parent'
+    });
+    if (!ok) {
       return;
     }
     this.parentService.delete(parent.id).subscribe({
       next: () => {
-        this.toastr.success('Parent removed');
+        this.toastr.success(`${parent.fullName} was removed`);
+        if (this.parents.length === 1 && this.page > 0) {
+          this.page--;
+        }
         this.load();
         if (!parent.enabled) {
           this.loadPending();
         }
       },
-      error: (err) => {
-        this.toastr.error(err?.error?.message ?? 'Could not remove parent');
-      }
+      error: (err) => this.toastr.error(err?.error?.message ?? 'Could not remove parent')
     });
   }
 
@@ -99,7 +118,7 @@ export class ParentListComponent implements OnInit {
 
   loadPending(): void {
     this.loadingPending = true;
-    this.parentService.getPending(this.pendingPage, 10).subscribe({
+    this.parentService.getPending(this.pendingPage, this.pageSize).subscribe({
       next: (result) => {
         // If the last row on a later page was just handled, step back a page.
         if (result.content.length === 0 && this.pendingPage > 0) {
@@ -140,9 +159,14 @@ export class ParentListComponent implements OnInit {
     });
   }
 
-  reject(parent: ParentResponse): void {
-    if (!this.confirmService.confirm(
-      `Reject the registration from "${parent.fullName}" (${parent.username})? The account will be deleted.`)) {
+  async reject(parent: ParentResponse): Promise<void> {
+    const ok = await this.confirmService.ask({
+      title: `Reject ${parent.fullName}'s registration?`,
+      message: `The account "${parent.username}" will be deleted and the username freed up. This cannot be undone.`,
+      confirmText: 'Reject registration',
+      icon: 'person-x'
+    });
+    if (!ok) {
       return;
     }
     this.actingOnId = parent.id;

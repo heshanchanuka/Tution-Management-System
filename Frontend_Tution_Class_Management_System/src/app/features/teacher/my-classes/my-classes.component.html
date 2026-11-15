@@ -1,35 +1,58 @@
-<div class="container-fluid px-4 py-4">
-  <h3 class="fw-bold mb-3">My Classes</h3>
-
-  <div class="card border-0 shadow-sm">
-    <div class="table-responsive">
-      <table class="table table-hover mb-0 align-middle">
-        <thead class="table-light">
-          <tr>
-            <th>Subject</th>
-            <th>Grade</th>
-            <th>Schedule</th>
-            <th>Enrolled</th>
-            <th class="text-end">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let cls of classes">
-            <td>{{ cls.subject }}</td>
-            <td>{{ cls.gradeLevel }}</td>
-            <td>{{ cls.dayOfWeek | titlecase }} {{ cls.startTime.slice(0,5) }}–{{ cls.endTime.slice(0,5) }}</td>
-            <td>{{ cls.enrolledCount }} / {{ cls.capacity }}</td>
-            <td class="text-end">
-              <a [routerLink]="[cls.id, 'students']" class="btn btn-sm btn-outline-secondary me-2">Roster</a>
-              <a [routerLink]="[cls.id, 'attendance']" class="btn btn-sm btn-outline-primary me-2">Attendance</a>
-              <a [routerLink]="[cls.id, 'marks']" class="btn btn-sm btn-outline-success">Marks</a>
-            </td>
-          </tr>
-          <tr *ngIf="!loading && classes.length === 0">
-            <td colspan="5" class="text-center text-muted py-4">You aren't assigned to any classes yet.</td>
-          </tr>
-        </tbody>
-      </table>
+<app-page-header title="My classes" subtitle="Every class you teach, in weekly order.">
+  <div style="min-width: 260px" *ngIf="classes.length > 3">
+    <div class="input-icon">
+      <i class="bi bi-search"></i>
+      <input type="search" class="form-control" placeholder="Filter by subject or grade…" [(ngModel)]="filter" aria-label="Filter classes" />
     </div>
+  </div>
+</app-page-header>
+
+<div class="row g-3" *ngIf="loading">
+  <div class="col-md-6 col-xl-4" *ngFor="let i of [1, 2, 3]">
+    <div class="item-card">
+      <span class="skeleton mb-3" style="height: 2.5rem; width: 2.5rem; border-radius: .7rem"></span>
+      <span class="skeleton mb-2" style="height: 1rem; width: 60%"></span>
+      <span class="skeleton mb-4" style="height: .8rem; width: 40%"></span>
+      <span class="skeleton" style="height: 2rem"></span>
+    </div>
+  </div>
+</div>
+
+<div class="card" *ngIf="!loading && loadError">
+  <app-empty-state icon="wifi-off" tone="danger" title="Couldn't load your classes" message="Check your connection and try again.">
+    <button type="button" class="btn btn-white" (click)="load()"><i class="bi bi-arrow-clockwise"></i> Retry</button>
+  </app-empty-state>
+</div>
+
+<div class="card" *ngIf="!loading && !loadError && classes.length === 0">
+  <app-empty-state icon="journal-x" title="No classes assigned yet"
+                   message="Once the institute assigns you to a class, it will appear here."></app-empty-state>
+</div>
+
+<div class="row g-3" *ngIf="!loading && classes.length > 0">
+  <div class="col-md-6 col-xl-4" *ngFor="let cls of filtered">
+    <div class="item-card">
+      <div class="d-flex justify-content-between align-items-start mb-3">
+        <span class="icon-tile tone-primary"><i class="bi bi-journal-text"></i></span>
+        <span class="badge-soft tone-success" *ngIf="cls.dayOfWeek === todayName"><span class="dot"></span>Today</span>
+      </div>
+      <h3 class="h6 fw-bold mb-1">{{ cls.subject }}</h3>
+      <div class="text-muted small mb-3">{{ cls.gradeLevel }}</div>
+      <ul class="meta-list mb-3">
+        <li><i class="bi bi-calendar-week"></i>{{ cls | schedule:'long' }}</li>
+        <li><i class="bi bi-people"></i>{{ cls.enrolledCount }} of {{ cls.capacity }} students</li>
+      </ul>
+      <div class="progress mb-1" style="height: .35rem">
+        <div class="progress-bar" [style.width.%]="cls.enrolledCount | percentOf:cls.capacity"></div>
+      </div>
+      <div class="item-card-footer">
+        <a [routerLink]="[cls.id, 'attendance']" class="btn btn-sm btn-primary flex-grow-1"><i class="bi bi-check2-square"></i> Attendance</a>
+        <a [routerLink]="[cls.id, 'marks']" class="btn btn-sm btn-white flex-grow-1"><i class="bi bi-journal-check"></i> Marks</a>
+        <a [routerLink]="[cls.id, 'students']" class="btn btn-sm btn-white" title="Roster" aria-label="Roster"><i class="bi bi-people"></i></a>
+      </div>
+    </div>
+  </div>
+  <div class="col-12" *ngIf="filtered.length === 0">
+    <div class="card"><app-empty-state icon="search" [compact]="true" title="No matching classes" message="Try a different subject or grade."></app-empty-state></div>
   </div>
 </div>

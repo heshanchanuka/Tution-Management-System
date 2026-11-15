@@ -1,65 +1,87 @@
-<div class="container-fluid px-4 py-4" style="max-width: 680px;">
-  <a routerLink="/parent/children" class="text-decoration-none small">‹ Back to My Children</a>
+<app-child-header [childId]="studentId" [child]="child"></app-child-header>
 
-  <h3 class="fw-bold mt-2 mb-4" *ngIf="child">{{ child.fullName }} — Fees</h3>
+<app-empty-state *ngIf="!loading && loadError" icon="wifi-off" tone="danger" title="Couldn't load fees" message="Check your connection and try again.">
+  <button type="button" class="btn btn-white" (click)="load()"><i class="bi bi-arrow-clockwise"></i> Retry</button>
+</app-empty-state>
 
-  <div class="card border-0 shadow-sm">
-    <div class="table-responsive">
-      <table class="table mb-0 align-middle">
-        <thead class="table-light">
-          <tr>
-            <th>Class</th>
-            <th>Period</th>
-            <th>Due</th>
-            <th>Paid</th>
-            <th>Status</th>
-            <th>Due Date</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          <ng-container *ngFor="let invoice of invoices">
-            <tr class="invoice-row" (click)="toggleInvoice(invoice)">
-              <td>{{ invoice.subject }}</td>
-              <td>{{ invoice.period }}</td>
-              <td>{{ invoice.amountDue | number:'1.2-2' }}</td>
-              <td>{{ invoice.amountPaid | number:'1.2-2' }}</td>
-              <td>
-                <span class="badge"
-                      [class.bg-success]="invoice.status === 'PAID'"
-                      [class.bg-warning]="invoice.status === 'PARTIAL'"
-                      [class.bg-secondary]="invoice.status === 'DUE'"
-                      [class.bg-danger]="invoice.status === 'OVERDUE'">
-                  {{ invoice.status }}
-                </span>
-              </td>
-              <td>{{ invoice.dueDate }}</td>
-              <td class="text-muted small">{{ expandedInvoiceId === invoice.id ? '▲' : '▼' }}</td>
-            </tr>
-            <tr *ngIf="expandedInvoiceId === invoice.id">
-              <td colspan="7" class="bg-light">
-                <div class="d-flex flex-wrap gap-2" *ngIf="paymentsFor(invoice.id).length > 0; else noPayments">
-                  <span class="small text-muted me-2">Payments:</span>
-                  <button
-                    type="button"
-                    class="btn btn-sm btn-outline-secondary"
-                    *ngFor="let payment of paymentsFor(invoice.id)"
-                    (click)="downloadReceipt(payment)">
-                    {{ payment.receiptNumber }} — {{ payment.amountPaid | number:'1.2-2' }} ({{ payment.method }})
-                  </button>
-                </div>
-                <ng-template #noPayments>
-                  <span class="text-muted small">No payments recorded yet.</span>
-                </ng-template>
-              </td>
-            </tr>
-          </ng-container>
-
-          <tr *ngIf="!loading && invoices.length === 0">
-            <td colspan="7" class="text-center text-muted py-4">No fee invoices yet.</td>
-          </tr>
-        </tbody>
-      </table>
+<ng-container *ngIf="!loadError">
+  <div class="row g-3 mb-3">
+    <div class="col-sm-4">
+      <app-stat-card label="Total billed" icon="receipt" tone="primary" [value]="totals.due | lkr:0" [loading]="loading"></app-stat-card>
+    </div>
+    <div class="col-sm-4">
+      <app-stat-card label="Paid" icon="check-circle" tone="success" [value]="totals.paid | lkr:0" [loading]="loading"></app-stat-card>
+    </div>
+    <div class="col-sm-4">
+      <app-stat-card label="Outstanding" icon="wallet2" [tone]="totals.balance > 0 ? 'danger' : 'success'" [value]="totals.balance | lkr:0"
+                     [hint]="overdueCount > 0 ? overdueCount + ' overdue invoice' + (overdueCount === 1 ? '' : 's') : (totals.balance === 0 && invoices.length ? 'All paid up 🎉' : null)"
+                     [loading]="loading"></app-stat-card>
     </div>
   </div>
-</div>
+
+  <div class="card table-card">
+    <div class="card-header">
+      <h2 class="card-title">Invoices</h2>
+      <div class="card-subtitle-muted">Select an invoice to see its payments and download receipts.</div>
+    </div>
+
+    <app-skeleton-list *ngIf="loading" [rows]="4" [avatar]="false"></app-skeleton-list>
+    <app-empty-state *ngIf="!loading && invoices.length === 0" icon="receipt" title="No invoices yet"
+                     message="Monthly invoices for your child's classes will appear here."></app-empty-state>
+
+    <div *ngIf="!loading && invoices.length > 0">
+      <div *ngFor="let invoice of invoices" class="border-bottom">
+        <button type="button" class="w-100 border-0 bg-transparent text-start px-3 px-md-4 py-3 d-flex flex-wrap align-items-center gap-3"
+                style="color: inherit" (click)="toggleInvoice(invoice)" [attr.aria-expanded]="expandedInvoiceId === invoice.id">
+          <span class="icon-tile" [ngClass]="invoice.status === 'PAID' ? 'tone-success' : invoice.status === 'OVERDUE' ? 'tone-danger' : 'tone-primary'">
+            <i class="bi" [ngClass]="invoice.status === 'PAID' ? 'bi-check2' : 'bi-receipt'"></i>
+          </span>
+          <div class="flex-grow-1 min-w-0">
+            <div class="d-flex align-items-center gap-2 flex-wrap">
+              <span class="fw-semibold">{{ invoice.subject }}</span>
+              <app-status-badge [status]="invoice.status"></app-status-badge>
+            </div>
+            <div class="small text-muted">{{ invoice.period }} · Due {{ invoice.dueDate | date:'d MMM y' }}</div>
+          </div>
+          <div class="meter d-none d-md-flex" style="width: 160px">
+            <div class="progress">
+              <div class="progress-bar" [ngClass]="invoice.status === 'PAID' ? 'bg-success' : invoice.status === 'OVERDUE' ? 'bg-danger' : 'bg-primary'"
+                   [style.width.%]="invoice.amountPaid | percentOf:invoice.amountDue"></div>
+            </div>
+          </div>
+          <div class="text-end" style="min-width: 110px">
+            <div class="fw-semibold tabular-nums">{{ invoice.amountDue | lkr }}</div>
+            <div class="small tabular-nums" [ngClass]="balanceOf(invoice) > 0 ? 'text-tone-danger' : 'text-tone-success'">
+              {{ balanceOf(invoice) > 0 ? (balanceOf(invoice) | lkr) + ' due' : 'Paid' }}
+            </div>
+          </div>
+          <i class="bi text-muted" [ngClass]="expandedInvoiceId === invoice.id ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
+        </button>
+
+        <div *ngIf="expandedInvoiceId === invoice.id" class="px-3 px-md-4 pb-3 fade-in">
+          <div class="rounded-3 border p-3" style="background: var(--app-surface-2)">
+            <div *ngIf="loadingPaymentsFor.has(invoice.id)" class="small text-muted"><span class="spinner-border spinner-border-sm me-2"></span>Loading payments…</div>
+            <div *ngIf="!loadingPaymentsFor.has(invoice.id) && paymentsFor(invoice.id).length === 0" class="small text-muted">
+              <i class="bi bi-info-circle me-1"></i>No payments recorded for this invoice yet.
+            </div>
+            <div *ngFor="let payment of paymentsFor(invoice.id)" class="d-flex flex-wrap align-items-center gap-3 py-2 border-bottom">
+              <span class="icon-tile icon-tile-sm tone-success"><i class="bi bi-cash-coin"></i></span>
+              <div class="flex-grow-1">
+                <div class="fw-medium tabular-nums">{{ payment.amountPaid | lkr }}</div>
+                <div class="small text-muted">{{ payment.paymentDate | date:'d MMM y' }} · {{ payment.method | humanize }} · {{ payment.receiptNumber }}</div>
+              </div>
+              <button type="button" class="btn btn-sm btn-white" [disabled]="downloadingId === payment.id" (click)="downloadReceipt(payment)">
+                <span *ngIf="downloadingId === payment.id" class="spinner-border spinner-border-sm"></span>
+                <i *ngIf="downloadingId !== payment.id" class="bi bi-file-earmark-arrow-down"></i> Receipt
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <p class="small text-muted mt-3" *ngIf="!loading && totals.balance > 0">
+    <i class="bi bi-info-circle me-1"></i>Payments are made at the institute office. Receipts appear here as soon as a payment is recorded.
+  </p>
+</ng-container>

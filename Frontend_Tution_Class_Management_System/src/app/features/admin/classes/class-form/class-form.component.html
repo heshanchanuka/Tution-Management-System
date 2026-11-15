@@ -1,65 +1,126 @@
-<div class="container-fluid px-4 py-4" style="max-width: 560px;">
-  <h3 class="fw-bold mb-4">{{ isEditMode ? 'Edit Class' : 'Add Class' }}</h3>
+<app-page-header [title]="isEditMode ? 'Edit class' : 'Create a class'"
+                 [subtitle]="isEditMode ? 'Update the subject, schedule or fee.' : 'Set up a subject, its teacher and weekly schedule.'"
+                 backLink="/admin/classes" backLabel="Classes">
+  <a *ngIf="isEditMode" [routerLink]="['/admin/classes', classId, 'students']" class="btn btn-white">
+    <i class="bi bi-people"></i> Manage students
+  </a>
+</app-page-header>
 
-  <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
-    <div class="mb-3">
-      <label class="form-label">Subject</label>
-      <input type="text" formControlName="subject" class="form-control" placeholder="e.g. Mathematics"
-             [class.is-invalid]="f['subject'].invalid && f['subject'].touched" />
-    </div>
-
-    <div class="mb-3">
-      <label class="form-label">Grade Level</label>
-      <input type="text" formControlName="gradeLevel" class="form-control" placeholder="e.g. Grade 8"
-             [class.is-invalid]="f['gradeLevel'].invalid && f['gradeLevel'].touched" />
-    </div>
-
-    <div class="mb-3">
-      <label class="form-label">Teacher</label>
-      <select formControlName="teacherId" class="form-select"
-              [class.is-invalid]="f['teacherId'].invalid && f['teacherId'].touched">
-        <option [ngValue]="null" disabled>Select a teacher…</option>
-        <option *ngFor="let teacher of teachers" [ngValue]="teacher.id">{{ teacher.fullName }} ({{ teacher.subjectSpecialty }})</option>
-      </select>
-    </div>
-
-    <div class="row">
-      <div class="col-md-4 mb-3">
-        <label class="form-label">Day</label>
-        <select formControlName="dayOfWeek" class="form-select"
-                [class.is-invalid]="f['dayOfWeek'].invalid && f['dayOfWeek'].touched">
-          <option [ngValue]="null" disabled>Select…</option>
-          <option *ngFor="let day of days" [ngValue]="day">{{ day | titlecase }}</option>
-        </select>
+<form class="card form-card" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+  <ng-container *ngIf="!loading; else loadingTpl">
+    <div class="form-section">
+      <div>
+        <div class="form-section-title">Class details</div>
+        <p class="form-section-desc">What is taught, to whom, and by whom.</p>
       </div>
-      <div class="col-md-4 mb-3">
-        <label class="form-label">Start Time</label>
-        <input type="time" formControlName="startTime" class="form-control"
-               [class.is-invalid]="f['startTime'].invalid && f['startTime'].touched" />
-      </div>
-      <div class="col-md-4 mb-3">
-        <label class="form-label">End Time</label>
-        <input type="time" formControlName="endTime" class="form-control"
-               [class.is-invalid]="f['endTime'].invalid && f['endTime'].touched" />
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label class="form-label required" for="subject">Subject</label>
+          <input id="subject" type="text" formControlName="subject" class="form-control" placeholder="e.g. Mathematics"
+                 [class.is-invalid]="invalid('subject')" />
+          <div class="invalid-feedback">Subject is required.</div>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label required" for="gradeLevel">Grade</label>
+          <input id="gradeLevel" type="text" formControlName="gradeLevel" class="form-control" placeholder="e.g. Grade 10"
+                 [class.is-invalid]="invalid('gradeLevel')" />
+          <div class="invalid-feedback">Grade is required.</div>
+        </div>
+        <div class="col-12">
+          <label class="form-label required" for="teacherId">Teacher</label>
+          <select id="teacherId" formControlName="teacherId" class="form-select" [class.is-invalid]="invalid('teacherId')">
+            <option [ngValue]="null" disabled>{{ loadingTeachers ? 'Loading teachers…' : 'Select a teacher…' }}</option>
+            <option *ngFor="let teacher of teachers" [ngValue]="teacher.id">
+              {{ teacher.fullName }}{{ teacher.subjectSpecialty ? ' — ' + teacher.subjectSpecialty : '' }}
+            </option>
+          </select>
+          <div class="invalid-feedback">Choose the teacher for this class.</div>
+          <div class="form-text" *ngIf="!loadingTeachers && teachers.length === 0">
+            No teachers yet. <a routerLink="/admin/teachers/new">Add a teacher</a> first.
+          </div>
+        </div>
       </div>
     </div>
 
-    <div class="row">
-      <div class="col-md-6 mb-3">
-        <label class="form-label">Fee Amount (LKR)</label>
-        <input type="number" step="0.01" formControlName="feeAmount" class="form-control"
-               [class.is-invalid]="f['feeAmount'].invalid && f['feeAmount'].touched" />
+    <div class="form-section">
+      <div>
+        <div class="form-section-title">Weekly schedule</div>
+        <p class="form-section-desc">The class meets on this day every week.</p>
       </div>
-      <div class="col-md-6 mb-4">
-        <label class="form-label">Capacity</label>
-        <input type="number" formControlName="capacity" class="form-control"
-               [class.is-invalid]="f['capacity'].invalid && f['capacity'].touched" />
+      <div>
+        <label class="form-label required">Day</label>
+        <div class="d-flex flex-wrap gap-2 mb-3" role="radiogroup" aria-label="Day of week">
+          <button *ngFor="let day of days" type="button" class="btn btn-sm"
+                  [ngClass]="form.value.dayOfWeek === day ? 'btn-primary' : 'btn-white'"
+                  [attr.aria-pressed]="form.value.dayOfWeek === day"
+                  (click)="f['dayOfWeek'].setValue(day); f['dayOfWeek'].markAsTouched()">
+            {{ day | humanize | slice:0:3 }}
+          </button>
+        </div>
+        <div class="invalid-feedback d-block mt-n2 mb-3" *ngIf="invalid('dayOfWeek')">Choose a day.</div>
+
+        <div class="row g-3">
+          <div class="col-sm-6">
+            <label class="form-label required" for="startTime">Starts</label>
+            <input id="startTime" type="time" formControlName="startTime" class="form-control"
+                   [class.is-invalid]="invalid('startTime') || (form.hasError('timeRange') && f['endTime'].touched)" />
+          </div>
+          <div class="col-sm-6">
+            <label class="form-label required" for="endTime">Ends</label>
+            <input id="endTime" type="time" formControlName="endTime" class="form-control"
+                   [class.is-invalid]="invalid('endTime') || (form.hasError('timeRange') && f['endTime'].touched)" />
+          </div>
+        </div>
+        <div class="invalid-feedback d-block" *ngIf="form.hasError('timeRange') && f['endTime'].touched">The class must end after it starts.</div>
+        <div class="form-text" *ngIf="duration"><i class="bi bi-hourglass me-1"></i>{{ duration }} per session</div>
       </div>
     </div>
 
-    <button type="submit" class="btn btn-primary" [disabled]="submitting">
-      {{ isEditMode ? 'Save Changes' : 'Create Class' }}
+    <div class="form-section">
+      <div>
+        <div class="form-section-title">Fee &amp; capacity</div>
+        <p class="form-section-desc">The monthly fee is used when generating invoices.</p>
+      </div>
+      <div class="row g-3">
+        <div class="col-sm-6">
+          <label class="form-label required" for="feeAmount">Monthly fee</label>
+          <div class="input-group" [class.has-validation]="invalid('feeAmount')">
+            <span class="input-group-text">LKR</span>
+            <input id="feeAmount" type="number" step="0.01" min="0" formControlName="feeAmount" class="form-control"
+                   placeholder="0.00" [class.is-invalid]="invalid('feeAmount')" />
+            <div class="invalid-feedback">Enter a fee greater than zero.</div>
+          </div>
+        </div>
+        <div class="col-sm-6">
+          <label class="form-label required" for="capacity">Capacity</label>
+          <div class="input-group" [class.has-validation]="invalid('capacity')">
+            <input id="capacity" type="number" min="1" formControlName="capacity" class="form-control" placeholder="e.g. 30"
+                   [class.is-invalid]="invalid('capacity')" />
+            <span class="input-group-text">students</span>
+            <div class="invalid-feedback">Capacity must be at least 1.</div>
+          </div>
+          <div class="form-text" *ngIf="isEditMode">{{ enrolledCount }} student{{ enrolledCount === 1 ? ' is' : 's are' }} enrolled right now.</div>
+        </div>
+      </div>
+    </div>
+  </ng-container>
+
+  <div class="form-footer">
+    <a routerLink="/admin/classes" class="btn btn-white">Cancel</a>
+    <button type="submit" class="btn btn-primary" [disabled]="submitting || loading">
+      <span *ngIf="submitting" class="spinner-border spinner-border-sm"></span>
+      {{ isEditMode ? 'Save changes' : 'Create class' }}
     </button>
-    <a routerLink="/admin/classes" class="btn btn-outline-secondary ms-2">Cancel</a>
-  </form>
-</div>
+  </div>
+</form>
+
+<ng-template #loadingTpl>
+  <div class="p-4">
+    <div class="row g-3">
+      <div class="col-md-6" *ngFor="let i of [1, 2, 3, 4, 5, 6]">
+        <span class="skeleton mb-2" style="height: .8rem; width: 30%"></span>
+        <span class="skeleton" style="height: 2.4rem"></span>
+      </div>
+    </div>
+  </div>
+</ng-template>

@@ -9,15 +9,16 @@ import {
 import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { Router } from '@angular/router';
+import { ToastrService } from 'ngx-toastr';
 import { AuthService } from '../services/auth.service';
 
 @Injectable()
 export class AuthInterceptor implements HttpInterceptor {
 
-  constructor(private authService: AuthService, private router: Router) {
+  constructor(private authService: AuthService, private router: Router, private toastr: ToastrService) {
   }
 
-  intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
+  intercept(req: HttpRequest<unknown>, next: HttpHandler): Observable<HttpEvent<unknown>> {
     const token = this.authService.getToken();
     const authReq = token
       ? req.clone({ setHeaders: { Authorization: `Bearer ${token}` } })
@@ -33,8 +34,14 @@ export class AuthInterceptor implements HttpInterceptor {
           return throwError(() => error);
         }
         if (error.status === 401) {
+          // Session expired or revoked: sign out and come back here after signing in again.
+          const hadSession = !!this.authService.getToken();
           this.authService.logout();
-          this.router.navigate(['/login']);
+          if (hadSession) {
+            this.toastr.info('Your session has expired. Please sign in again.', 'Signed out');
+          }
+          const returnUrl = this.router.url.startsWith('/login') ? undefined : this.router.url;
+          this.router.navigate(['/login'], { queryParams: returnUrl ? { returnUrl } : {} });
         } else if (error.status === 403) {
           this.router.navigate(['/forbidden']);
         }

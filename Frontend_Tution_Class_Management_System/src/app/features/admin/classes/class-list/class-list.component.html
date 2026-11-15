@@ -1,59 +1,86 @@
-<div class="container-fluid px-4 py-4">
-  <div class="d-flex justify-content-between align-items-center mb-3">
-    <h3 class="fw-bold mb-0">Classes</h3>
-    <a routerLink="new" class="btn btn-primary btn-sm">+ Add Class</a>
-  </div>
+<app-page-header title="Classes" subtitle="Subjects, schedules, teachers and enrolment.">
+  <a routerLink="new" class="btn btn-primary"><i class="bi bi-plus-lg"></i> Add class</a>
+</app-page-header>
 
-  <div class="input-group mb-3" style="max-width: 320px;">
-    <input
-      type="text"
-      class="form-control"
-      placeholder="Search by subject…"
-      [(ngModel)]="searchTerm"
-      (keyup.enter)="search()"
-    />
-    <button class="btn btn-outline-secondary" type="button" (click)="search()">Search</button>
-  </div>
-
-  <div class="card border-0 shadow-sm">
-    <div class="table-responsive">
-      <table class="table table-hover mb-0 align-middle">
-        <thead class="table-light">
-          <tr>
-            <th>Subject</th>
-            <th>Grade</th>
-            <th>Teacher</th>
-            <th>Schedule</th>
-            <th>Fee</th>
-            <th>Enrolled</th>
-            <th class="text-end">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let cls of classes">
-            <td>{{ cls.subject }}</td>
-            <td>{{ cls.gradeLevel }}</td>
-            <td>{{ cls.teacherName }}</td>
-            <td>{{ cls.dayOfWeek | titlecase }} {{ cls.startTime.slice(0, 5) }}–{{ cls.endTime.slice(0, 5) }}</td>
-            <td>{{ cls.feeAmount | number:'1.2-2' }}</td>
-            <td>
-              <span class="badge" [class.bg-danger]="cls.enrolledCount >= cls.capacity" [class.bg-secondary]="cls.enrolledCount < cls.capacity">
-                {{ cls.enrolledCount }} / {{ cls.capacity }}
-              </span>
-            </td>
-            <td class="text-end">
-              <a [routerLink]="[cls.id, 'students']" class="btn btn-sm btn-outline-success me-2">Students</a>
-              <a [routerLink]="[cls.id, 'edit']" class="btn btn-sm btn-outline-primary me-2">Edit</a>
-              <button type="button" class="btn btn-sm btn-outline-danger" (click)="delete(cls)">Delete</button>
-            </td>
-          </tr>
-          <tr *ngIf="!loading && classes.length === 0">
-            <td colspan="7" class="text-center text-muted py-4">No classes found.</td>
-          </tr>
-        </tbody>
-      </table>
+<div class="card table-card">
+  <div class="table-toolbar">
+    <div class="search-box">
+      <app-search-input placeholder="Search classes by subject…" [value]="searchTerm" (search)="search($event)"></app-search-input>
     </div>
+    <span class="small text-muted" *ngIf="!loading">{{ totalElements }} class{{ totalElements === 1 ? '' : 'es' }}</span>
   </div>
 
-  <app-pagination [page]="page" [totalPages]="totalPages" (pageChange)="onPageChange($event)"></app-pagination>
+  <app-skeleton-list *ngIf="loading" [avatar]="false"></app-skeleton-list>
+
+  <app-empty-state *ngIf="!loading && loadError" icon="wifi-off" tone="danger" title="Couldn't load classes"
+                   message="Check your connection and try again.">
+    <button type="button" class="btn btn-white" (click)="load()"><i class="bi bi-arrow-clockwise"></i> Retry</button>
+  </app-empty-state>
+
+  <app-empty-state *ngIf="!loading && !loadError && classes.length === 0"
+                   [icon]="searchTerm ? 'search' : 'journal-bookmark'"
+                   [title]="searchTerm ? 'No matching classes' : 'No classes yet'"
+                   [message]="searchTerm ? 'Try a different subject.' : 'Create a class, assign a teacher and start enrolling students.'">
+    <a *ngIf="!searchTerm" routerLink="new" class="btn btn-primary"><i class="bi bi-plus-lg"></i> Add class</a>
+  </app-empty-state>
+
+  <div class="table-responsive" *ngIf="!loading && !loadError && classes.length > 0">
+    <table class="table table-hover align-middle">
+      <thead>
+        <tr>
+          <th>Class</th>
+          <th class="d-none d-md-table-cell">Teacher</th>
+          <th>Schedule</th>
+          <th class="d-none d-lg-table-cell text-end">Monthly fee</th>
+          <th class="d-none d-sm-table-cell">Enrolment</th>
+          <th class="table-actions"><span class="visually-hidden">Actions</span></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let cls of classes">
+          <td>
+            <div class="entity">
+              <span class="icon-tile icon-tile-sm tone-primary"><i class="bi bi-journal-text"></i></span>
+              <div class="min-w-0">
+                <div class="entity-name">{{ cls.subject }}</div>
+                <div class="entity-meta">{{ cls.gradeLevel }}</div>
+              </div>
+            </div>
+          </td>
+          <td class="d-none d-md-table-cell">
+            <div class="d-flex align-items-center gap-2">
+              <app-avatar [name]="cls.teacherName" size="sm"></app-avatar>
+              <span>{{ cls.teacherName }}</span>
+            </div>
+          </td>
+          <td class="text-nowrap"><i class="bi bi-clock text-muted me-1"></i>{{ cls | schedule }}</td>
+          <td class="d-none d-lg-table-cell text-end tabular-nums">{{ cls.feeAmount | lkr:0 }}</td>
+          <td class="d-none d-sm-table-cell" style="min-width: 150px">
+            <div class="meter">
+              <div class="progress">
+                <div class="progress-bar" [ngClass]="fillTone(cls)" [style.width.%]="cls.enrolledCount | percentOf:cls.capacity"></div>
+              </div>
+              <span class="meter-label">{{ cls.enrolledCount }}/{{ cls.capacity }}</span>
+            </div>
+          </td>
+          <td class="table-actions">
+            <a [routerLink]="[cls.id, 'students']" class="btn btn-sm btn-soft-primary me-1">
+              <i class="bi bi-people"></i><span class="d-none d-xl-inline">Students</span>
+            </a>
+            <a [routerLink]="[cls.id, 'edit']" class="btn btn-icon btn-icon-primary" title="Edit" [attr.aria-label]="'Edit ' + cls.subject">
+              <i class="bi bi-pencil"></i>
+            </a>
+            <button type="button" class="btn btn-icon btn-icon-danger" title="Delete" [attr.aria-label]="'Delete ' + cls.subject" (click)="delete(cls)">
+              <i class="bi bi-trash3"></i>
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="table-footer" *ngIf="!loading && totalPages > 1">
+    <app-pagination [page]="page" [totalPages]="totalPages" [totalElements]="totalElements" [pageSize]="pageSize"
+                    (pageChange)="onPageChange($event)"></app-pagination>
+  </div>
 </div>

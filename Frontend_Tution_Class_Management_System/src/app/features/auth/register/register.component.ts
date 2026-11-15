@@ -45,13 +45,13 @@ const PATTERN_MESSAGES: Record<string, string> = {
 
 @Component({
   selector: 'app-register',
-  templateUrl: './register.component.html',
-  styleUrls: ['./register.component.scss']
+  templateUrl: './register.component.html'
 })
 export class RegisterComponent {
 
   form: FormGroup;
   submitting = false;
+  showPassword = false;
 
   constructor(
     private fb: FormBuilder,
@@ -83,6 +83,33 @@ export class RegisterComponent {
 
   get f() {
     return this.form.controls;
+  }
+
+  /** 0-4 score for the strength meter: length, mixed case, digit, symbol. */
+  get passwordStrength(): number {
+    const value: string = this.form.get('password')?.value ?? '';
+    if (!value) {
+      return 0;
+    }
+    let score = value.length >= 8 ? 1 : 0;
+    if (/[a-z]/.test(value) && /[A-Z]/.test(value)) {
+      score++;
+    }
+    if (/\d/.test(value)) {
+      score++;
+    }
+    if (/[^A-Za-z0-9]/.test(value) || value.length >= 12) {
+      score++;
+    }
+    return Math.max(1, score);
+  }
+
+  get strengthLabel(): string {
+    return ['', 'Weak', 'Fair', 'Good', 'Strong'][this.passwordStrength];
+  }
+
+  get strengthColor(): string {
+    return ['', '#dc2626', '#f59e0b', '#0ea5e9', '#16a34a'][this.passwordStrength];
   }
 
   /** True when a field should render as invalid (client rule or server error). */

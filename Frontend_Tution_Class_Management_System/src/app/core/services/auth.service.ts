@@ -47,8 +47,28 @@ export class AuthService {
     return this.currentUserSubject.value;
   }
 
+  /** True when a non-expired token and user are stored. An expired session is cleared. */
   isLoggedIn(): boolean {
-    return !!this.getToken() && !!this.getUser();
+    const token = this.getToken();
+    if (!token || !this.getUser()) {
+      return false;
+    }
+    if (this.isTokenExpired(token)) {
+      this.logout();
+      return false;
+    }
+    return true;
+  }
+
+  /** Reads the JWT `exp` claim (seconds since epoch). Unreadable tokens are left to the server to judge. */
+  private isTokenExpired(token: string): boolean {
+    try {
+      const payload = token.split('.')[1];
+      const json = JSON.parse(atob(payload.replace(/-/g, '+').replace(/_/g, '/')));
+      return typeof json.exp === 'number' && json.exp * 1000 <= Date.now();
+    } catch {
+      return false;
+    }
   }
 
   /** True if the logged-in user holds at least one of the given roles. */

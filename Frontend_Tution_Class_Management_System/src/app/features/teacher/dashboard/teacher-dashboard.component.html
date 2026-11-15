@@ -1,51 +1,99 @@
-<div class="container-fluid px-4 py-4">
-  <h3 class="fw-bold mb-1">Welcome, {{ authService.getUser()?.fullName }}</h3>
-  <p class="text-muted mb-4">Here's a quick look at your classes.</p>
+<section class="welcome-banner">
+  <div class="row align-items-center g-3 position-relative" style="z-index: 1">
+    <div class="col-lg">
+      <div class="welcome-date">{{ today | date:'EEEE, d MMMM y' }}</div>
+      <h2>{{ greeting }}, {{ firstName }} 👋</h2>
+      <p *ngIf="!loading">
+        <ng-container *ngIf="todaysClasses.length > 0; else noneToday">
+          You have {{ todaysClasses.length }} class{{ todaysClasses.length === 1 ? '' : 'es' }} today.
+        </ng-container>
+        <ng-template #noneToday>No classes on your schedule today.</ng-template>
+      </p>
+    </div>
+    <div class="col-lg-auto" *ngIf="todaysClasses.length > 0">
+      <a [routerLink]="['/teacher/classes', todaysClasses[0].id, 'attendance']" class="btn btn-light">
+        <i class="bi bi-calendar2-check"></i> Mark {{ todaysClasses[0].subject }} attendance
+      </a>
+    </div>
+  </div>
+</section>
 
-  <div class="row g-3 mb-4" *ngIf="stats">
-    <div class="col-md-4 col-6">
-      <div class="card border-0 shadow-sm h-100">
-        <div class="card-body">
-          <div class="text-muted small">My Classes</div>
-          <div class="fs-3 fw-bold text-primary">{{ stats.totalClasses }}</div>
-        </div>
+<div class="row g-3 mb-4">
+  <div class="col-sm-4">
+    <app-stat-card label="My classes" icon="journal-bookmark" tone="primary" [value]="stats?.totalClasses ?? '—'"
+                   [loading]="loadingStats" link="/teacher/classes"></app-stat-card>
+  </div>
+  <div class="col-sm-4">
+    <app-stat-card label="Students taught" icon="people" tone="success" [value]="stats?.totalStudents ?? '—'"
+                   [loading]="loadingStats"></app-stat-card>
+  </div>
+  <div class="col-sm-4">
+    <app-stat-card label="Classes today" icon="calendar-day" tone="warning" [value]="stats?.classesToday ?? '—'"
+                   [loading]="loadingStats"></app-stat-card>
+  </div>
+</div>
+
+<div class="row g-3">
+  <!-- Today -->
+  <div class="col-xl-5">
+    <div class="card h-100">
+      <div class="card-header">
+        <h2 class="card-title">Today's schedule</h2>
+        <div class="card-subtitle-muted">{{ today | date:'EEEE' }}</div>
       </div>
-    </div>
-    <div class="col-md-4 col-6">
-      <div class="card border-0 shadow-sm h-100">
-        <div class="card-body">
-          <div class="text-muted small">Total Students</div>
-          <div class="fs-3 fw-bold text-success">{{ stats.totalStudents }}</div>
-        </div>
-      </div>
-    </div>
-    <div class="col-md-4 col-6">
-      <div class="card border-0 shadow-sm h-100">
-        <div class="card-body">
-          <div class="text-muted small">Classes Today</div>
-          <div class="fs-3 fw-bold text-info">{{ stats.classesToday }}</div>
+      <div class="card-body py-2">
+        <app-skeleton-list *ngIf="loading" [rows]="2" [avatar]="false"></app-skeleton-list>
+        <app-empty-state *ngIf="!loading && todaysClasses.length === 0" [compact]="true" icon="cup-hot" tone="warning"
+                         title="A free day" message="You don't have any classes scheduled today."></app-empty-state>
+        <div class="today-class" *ngFor="let cls of todaysClasses">
+          <div class="time-block">{{ cls.startTime.slice(0, 5) }}<small>{{ cls.endTime.slice(0, 5) }}</small></div>
+          <div class="flex-grow-1 min-w-0">
+            <div class="fw-semibold text-truncate">{{ cls.subject }}</div>
+            <div class="small text-muted">{{ cls.gradeLevel }} · {{ cls.enrolledCount }} students</div>
+            <span class="badge-soft mt-1" [ngClass]="'tone-' + status(cls).tone">{{ status(cls).label }}</span>
+          </div>
+          <div class="d-flex flex-column gap-1">
+            <a [routerLink]="['/teacher/classes', cls.id, 'attendance']" class="btn btn-sm btn-primary"><i class="bi bi-check2-square"></i> Attendance</a>
+            <a [routerLink]="['/teacher/classes', cls.id, 'marks']" class="btn btn-sm btn-white"><i class="bi bi-journal-check"></i> Marks</a>
+          </div>
         </div>
       </div>
     </div>
   </div>
 
-  <div class="row g-3" *ngIf="!loading">
-    <div class="col-md-4" *ngFor="let cls of classes">
-      <div class="card border-0 shadow-sm h-100">
-        <div class="card-body">
-          <h5 class="fw-semibold mb-1">{{ cls.subject }}</h5>
-          <p class="text-muted small mb-2">{{ cls.gradeLevel }} · {{ cls.dayOfWeek | titlecase }} {{ cls.startTime.slice(0,5) }}–{{ cls.endTime.slice(0,5) }}</p>
-          <p class="small mb-3">{{ cls.enrolledCount }} / {{ cls.capacity }} students enrolled</p>
-          <div class="d-flex gap-2">
-            <a [routerLink]="['/teacher/classes', cls.id, 'attendance']" class="btn btn-sm btn-outline-primary">Attendance</a>
-            <a [routerLink]="['/teacher/classes', cls.id, 'marks']" class="btn btn-sm btn-outline-success">Marks</a>
-          </div>
-        </div>
-      </div>
+  <!-- All classes -->
+  <div class="col-xl-7">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h2 class="section-title">This week</h2>
+      <a routerLink="/teacher/classes" class="small fw-medium">All classes <i class="bi bi-arrow-right"></i></a>
     </div>
-
-    <div class="col-12" *ngIf="classes.length === 0">
-      <div class="alert alert-info mb-0">You aren't assigned to any classes yet.</div>
+    <div class="card table-card">
+      <app-skeleton-list *ngIf="loading" [rows]="4" [avatar]="false"></app-skeleton-list>
+      <app-empty-state *ngIf="!loading && classes.length === 0" icon="journal-x"
+                       title="No classes assigned yet" message="Once the institute assigns you to a class, it will appear here."></app-empty-state>
+      <div class="table-responsive" *ngIf="!loading && classes.length > 0">
+        <table class="table table-hover align-middle">
+          <thead><tr><th>Class</th><th>When</th><th class="d-none d-sm-table-cell">Students</th><th class="table-actions"></th></tr></thead>
+          <tbody>
+            <tr *ngFor="let cls of weekClasses">
+              <td>
+                <div class="fw-semibold">{{ cls.subject }}</div>
+                <div class="small text-muted">{{ cls.gradeLevel }}</div>
+              </td>
+              <td class="text-nowrap">
+                {{ cls | schedule }}
+                <span class="badge-soft tone-success ms-1" *ngIf="cls.dayOfWeek === todayName">Today</span>
+              </td>
+              <td class="d-none d-sm-table-cell">{{ cls.enrolledCount }}/{{ cls.capacity }}</td>
+              <td class="table-actions">
+                <a [routerLink]="['/teacher/classes', cls.id, 'students']" class="btn btn-icon" title="Open class" [attr.aria-label]="'Open ' + cls.subject">
+                  <i class="bi bi-chevron-right"></i>
+                </a>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
   </div>
 </div>

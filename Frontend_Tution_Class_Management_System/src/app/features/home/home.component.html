@@ -1,24 +1,169 @@
-<div class="container py-5">
-  <div class="row align-items-center">
-    <div class="col-lg-7">
-      <h1 class="display-5 fw-bold">Tuition Class Management System</h1>
-      <p class="lead text-muted mt-3">
-        One place for an institute to manage classes and fees, for teachers to
-        mark attendance and enter marks, and for parents to see exactly how
-        their child is doing — without a phone call.
-      </p>
-      <a routerLink="/login" class="btn btn-primary btn-lg mt-2">Sign in</a>
-      <a routerLink="/register" class="btn btn-outline-primary btn-lg mt-2 ms-2">Register as a Parent</a>
-    </div>
-    <div class="col-lg-5">
-      <div class="card shadow-sm border-0 p-4">
-        <h5 class="text-primary">Admin</h5>
-        <p class="text-muted small mb-3">Classes, teachers, students, fees, reports.</p>
-        <h5 class="text-success">Teacher</h5>
-        <p class="text-muted small mb-3">Attendance and exam marks for your own classes.</p>
-        <h5 class="text-warning">Parent</h5>
-        <p class="text-muted small mb-0">Read-only view of your child's progress.</p>
+<div class="landing">
+  <app-public-header [showSections]="true"></app-public-header>
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="container">
+      <div class="row align-items-center g-5">
+        <div class="col-lg-6">
+          <span class="hero-eyebrow"><span class="pill">New</span> Parents can now register online</span>
+          <h1 class="hero-title">
+            Your tuition classes,<br>
+            <span class="gradient-text">beautifully organised.</span>
+          </h1>
+          <p class="hero-lead">
+            Classes, attendance, exam marks and fees in one place - for the institute that runs them,
+            the teachers who teach them, and the parents who want to know how their child is doing.
+          </p>
+          <div class="d-flex flex-wrap gap-2">
+            <ng-container *ngIf="authService.currentUser$ | async as user; else guestCta">
+              <a [routerLink]="dashboardLink(user.roles)" class="btn btn-primary btn-lg px-4">
+                Open my dashboard <i class="bi bi-arrow-right"></i>
+              </a>
+            </ng-container>
+            <ng-template #guestCta>
+              <a routerLink="/register" class="btn btn-primary btn-lg px-4">
+                Register as a parent <i class="bi bi-arrow-right"></i>
+              </a>
+              <a routerLink="/login" class="btn btn-white btn-lg px-4">Sign in</a>
+            </ng-template>
+          </div>
+          <div class="hero-points">
+            <span><i class="bi bi-check-circle-fill me-1"></i>Role-based portals</span>
+            <span><i class="bi bi-check-circle-fill me-1"></i>PDF receipts &amp; report cards</span>
+            <span><i class="bi bi-check-circle-fill me-1"></i>Works on any device</span>
+          </div>
+        </div>
+
+        <div class="col-lg-6 d-none d-md-block">
+          <div class="position-relative ms-lg-4">
+            <div class="preview">
+              <div class="preview-dots"><span></span><span></span><span></span></div>
+              <div class="row g-2 mb-3">
+                <div class="col-4" *ngFor="let s of previewStats">
+                  <div class="p-3 rounded-3 border" style="background: var(--app-surface-2)">
+                    <div class="small text-muted">{{ s.label }}</div>
+                    <div class="fs-5 fw-bold">{{ s.value }}</div>
+                    <div class="small" [ngClass]="'text-tone-' + s.tone"><i class="bi bi-arrow-up-right"></i> {{ s.trend }}</div>
+                  </div>
+                </div>
+              </div>
+              <div class="p-3 rounded-3 border" style="background: var(--app-surface-2)">
+                <div class="d-flex justify-content-between align-items-center">
+                  <span class="small fw-semibold">Monthly revenue</span>
+                  <span class="badge-soft tone-success">+12.4%</span>
+                </div>
+                <div class="preview-bars">
+                  <span *ngFor="let h of previewBars" [style.height.%]="h"></span>
+                </div>
+              </div>
+            </div>
+
+            <div class="float-card fc-1">
+              <span class="icon-tile icon-tile-sm tone-success"><i class="bi bi-check2-all"></i></span>
+              <div>
+                <div class="fw-semibold">Attendance saved</div>
+                <div class="text-muted" style="font-size:.72rem">Grade 10 · Mathematics</div>
+              </div>
+            </div>
+            <div class="float-card fc-2">
+              <span class="icon-tile icon-tile-sm tone-primary"><i class="bi bi-receipt"></i></span>
+              <div>
+                <div class="fw-semibold">Payment received</div>
+                <div class="text-muted" style="font-size:.72rem">LKR 4,500 · Receipt ready</div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
-  </div>
+  </section>
+
+  <!-- Features -->
+  <section class="section pt-4" id="features">
+    <div class="container">
+      <div class="section-heading">
+        <span class="section-eyebrow">Everything in one place</span>
+        <h2>Built for the way tuition classes actually run</h2>
+        <p>No more attendance registers, receipt books and phone calls to ask how a child did in the test.</p>
+      </div>
+      <div class="row g-4">
+        <div class="col-sm-6 col-lg-4" *ngFor="let f of features">
+          <div class="d-flex gap-3">
+            <span class="icon-tile" [ngClass]="'tone-' + f.tone"><i class="bi" [ngClass]="'bi-' + f.icon"></i></span>
+            <div>
+              <h3 class="h6 fw-bold mb-1">{{ f.title }}</h3>
+              <p class="text-muted small mb-0">{{ f.text }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Roles -->
+  <section class="section" id="roles" style="background: var(--app-surface-2); border-top: 1px solid var(--app-border); border-bottom: 1px solid var(--app-border);">
+    <div class="container">
+      <div class="section-heading">
+        <span class="section-eyebrow">One system, three portals</span>
+        <h2>Everyone sees exactly what they need</h2>
+        <p>Each person signs in to a portal designed for their role - and only sees their own data.</p>
+      </div>
+      <div class="row g-4">
+        <div class="col-lg-4" *ngFor="let role of roles">
+          <div class="role-card">
+            <span class="icon-tile icon-tile-lg" [ngClass]="'tone-' + role.tone"><i class="bi" [ngClass]="'bi-' + role.icon"></i></span>
+            <h3>{{ role.title }}</h3>
+            <p>{{ role.text }}</p>
+            <ul>
+              <li *ngFor="let point of role.points"><i class="bi bi-check-circle-fill"></i>{{ point }}</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- How it works -->
+  <section class="section" id="how-it-works">
+    <div class="container">
+      <div class="section-heading">
+        <span class="section-eyebrow">For parents</span>
+        <h2>Get started in three steps</h2>
+      </div>
+      <div class="row g-5">
+        <div class="col-md-4" *ngFor="let step of steps; let i = index">
+          <div class="step">
+            <div class="step-num">{{ i + 1 }}</div>
+            <h4>{{ step.title }}</h4>
+            <p>{{ step.text }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="pb-5">
+    <div class="container">
+      <div class="cta-band">
+        <h2>Ready to follow your child's progress?</h2>
+        <p>Create your parent account today. The institute will approve it and link your children.</p>
+        <div class="d-flex flex-wrap justify-content-center gap-2">
+          <a routerLink="/register" class="btn btn-light btn-lg px-4 fw-semibold" style="color:#312e81">Create an account</a>
+          <a routerLink="/login" class="btn btn-lg px-4" style="color:#fff;border:1px solid rgba(255,255,255,.4)">Sign in</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="public-footer">
+    <div class="container d-flex flex-wrap justify-content-between align-items-center gap-3">
+      <span class="brand">
+        <span class="brand-mark" style="width:1.75rem;height:1.75rem;font-size:.9rem"><i class="bi bi-mortarboard-fill"></i></span>
+        <span class="fw-semibold" style="color: var(--app-text)">TCMS</span>
+      </span>
+      <span>© {{ year }} Tuition Class Management System</span>
+    </div>
+  </footer>
 </div>

@@ -1,73 +1,94 @@
-<div class="register-page d-flex align-items-center justify-content-center py-4">
-  <div class="card shadow-sm border-0 p-4" style="width: 440px;">
-    <div class="text-center mb-4">
-      <h4 class="fw-bold mb-1">Create a parent account</h4>
-      <p class="text-muted small mb-0">Tuition Class Management System</p>
-    </div>
+<app-auth-layout [wide]="true"
+                 headline="Follow your child's progress, from anywhere."
+                 tagline="Create a parent account to see attendance, exam results, fee balances and announcements from the institute.">
+  <h1 class="auth-title">Create a parent account</h1>
+  <p class="auth-subtitle">It takes about a minute. The institute approves new accounts before first sign-in.</p>
 
-    <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
-      <div class="mb-3">
-        <label class="form-label">Full Name <span class="text-danger">*</span></label>
-        <input type="text" formControlName="fullName" class="form-control" autocomplete="name"
-               [class.is-invalid]="isInvalid('fullName')" />
+  <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+    <div class="section-eyebrow mb-2">Your details</div>
+    <div class="row g-3 mb-4">
+      <div class="col-12">
+        <label class="form-label required" for="fullName">Full name</label>
+        <input id="fullName" type="text" formControlName="fullName" class="form-control" autocomplete="name"
+               placeholder="e.g. Kamal Perera" [class.is-invalid]="isInvalid('fullName')" />
         <div class="invalid-feedback">{{ errorFor('fullName') }}</div>
       </div>
-
-      <div class="mb-3">
-        <label class="form-label">Username <span class="text-danger">*</span></label>
-        <input type="text" formControlName="username" class="form-control" autocomplete="username"
-               [class.is-invalid]="isInvalid('username')" />
-        <div class="invalid-feedback">{{ errorFor('username') }}</div>
-      </div>
-
-      <div class="row g-2">
-        <div class="col-sm-6 mb-3">
-          <label class="form-label">Password <span class="text-danger">*</span></label>
-          <input type="password" formControlName="password" class="form-control" autocomplete="new-password"
-                 [class.is-invalid]="isInvalid('password')" />
-          <div class="invalid-feedback">{{ errorFor('password') }}</div>
+      <div class="col-sm-6">
+        <label class="form-label" for="phone">Phone</label>
+        <div class="input-icon">
+          <i class="bi bi-telephone"></i>
+          <input id="phone" type="tel" formControlName="phone" class="form-control" autocomplete="tel"
+                 placeholder="077 123 4567" [class.is-invalid]="isInvalid('phone')" />
         </div>
-        <div class="col-sm-6 mb-3">
-          <label class="form-label">Confirm Password <span class="text-danger">*</span></label>
-          <input type="password" formControlName="confirmPassword" class="form-control" autocomplete="new-password"
-                 [class.is-invalid]="isInvalid('confirmPassword')" />
-          <div class="invalid-feedback">{{ errorFor('confirmPassword') }}</div>
-        </div>
+        <div class="invalid-feedback d-block" *ngIf="errorFor('phone')">{{ errorFor('phone') }}</div>
       </div>
-      <div class="form-text mt-n2 mb-3">At least 8 characters, with a letter and a number.</div>
-
-      <div class="mb-3">
-        <label class="form-label">Phone</label>
-        <input type="tel" formControlName="phone" class="form-control" autocomplete="tel"
-               [class.is-invalid]="isInvalid('phone')" />
-        <div class="invalid-feedback">{{ errorFor('phone') }}</div>
-      </div>
-
-      <div class="mb-3">
-        <label class="form-label">Address</label>
-        <input type="text" formControlName="address" class="form-control" autocomplete="street-address"
-               [class.is-invalid]="isInvalid('address')" />
-        <div class="invalid-feedback">{{ errorFor('address') }}</div>
-      </div>
-
-      <div class="mb-4">
-        <label class="form-label">Occupation</label>
-        <input type="text" formControlName="occupation" class="form-control"
-               [class.is-invalid]="isInvalid('occupation')" />
+      <div class="col-sm-6">
+        <label class="form-label" for="occupation">Occupation</label>
+        <input id="occupation" type="text" formControlName="occupation" class="form-control"
+               placeholder="Optional" [class.is-invalid]="isInvalid('occupation')" />
         <div class="invalid-feedback">{{ errorFor('occupation') }}</div>
       </div>
+      <div class="col-12">
+        <label class="form-label" for="address">Address</label>
+        <input id="address" type="text" formControlName="address" class="form-control" autocomplete="street-address"
+               placeholder="Optional" [class.is-invalid]="isInvalid('address')" />
+        <div class="invalid-feedback">{{ errorFor('address') }}</div>
+      </div>
+    </div>
 
-      <button type="submit" class="btn btn-primary w-100" [disabled]="submitting">
-        <span *ngIf="submitting" class="spinner-border spinner-border-sm me-2"></span>
-        {{ submitting ? 'Creating account…' : 'Register' }}
-      </button>
+    <div class="section-eyebrow mb-2">Sign-in details</div>
+    <div class="row g-3 mb-4">
+      <div class="col-12">
+        <label class="form-label required" for="username">Username</label>
+        <div class="input-icon">
+          <i class="bi bi-at"></i>
+          <input id="username" type="text" formControlName="username" class="form-control" autocomplete="username"
+                 placeholder="e.g. kamal.perera" [class.is-invalid]="isInvalid('username')" />
+        </div>
+        <div class="invalid-feedback d-block" *ngIf="errorFor('username'); else usernameHint">{{ errorFor('username') }}</div>
+        <ng-template #usernameHint><div class="form-text">4-50 characters: letters, numbers, dots and underscores.</div></ng-template>
+      </div>
+      <div class="col-sm-6">
+        <label class="form-label required" for="password">Password</label>
+        <div class="password-field">
+          <input id="password" [type]="showPassword ? 'text' : 'password'" formControlName="password" class="form-control"
+                 autocomplete="new-password" [class.is-invalid]="isInvalid('password')" />
+          <button type="button" class="reveal-btn" (click)="showPassword = !showPassword"
+                  [attr.aria-label]="showPassword ? 'Hide password' : 'Show password'">
+            <i class="bi" [ngClass]="showPassword ? 'bi-eye-slash' : 'bi-eye'"></i>
+          </button>
+        </div>
+        <div class="invalid-feedback d-block" *ngIf="errorFor('password')">{{ errorFor('password') }}</div>
+      </div>
+      <div class="col-sm-6">
+        <label class="form-label required" for="confirmPassword">Confirm password</label>
+        <input id="confirmPassword" [type]="showPassword ? 'text' : 'password'" formControlName="confirmPassword"
+               class="form-control" autocomplete="new-password" [class.is-invalid]="isInvalid('confirmPassword')" />
+        <div class="invalid-feedback">{{ errorFor('confirmPassword') }}</div>
+      </div>
+      <div class="col-12" *ngIf="f['password'].value">
+        <div class="strength" aria-hidden="true">
+          <span *ngFor="let i of [1, 2, 3, 4]" [style.background]="i <= passwordStrength ? strengthColor : null"></span>
+        </div>
+        <div class="form-text">
+          Password strength: <strong [style.color]="strengthColor">{{ strengthLabel }}</strong>
+          · at least 8 characters with a letter and a number.
+        </div>
+      </div>
+    </div>
 
-      <p class="text-muted small text-center mt-3 mb-0">
-        New accounts must be approved by the institute before you can sign in.
-      </p>
-      <p class="small text-center mt-2 mb-0">
-        Already have an account? <a routerLink="/login">Sign in</a>
-      </p>
-    </form>
-  </div>
-</div>
+    <button type="submit" class="btn btn-primary btn-lg w-100 fs-6" [disabled]="submitting">
+      <span *ngIf="submitting" class="spinner-border spinner-border-sm"></span>
+      {{ submitting ? 'Creating your account…' : 'Create account' }}
+    </button>
+
+    <div class="callout callout-info mt-4">
+      <i class="bi bi-info-circle fs-5"></i>
+      <p class="callout-text">After you register, the institute reviews your account and links your children to it. You'll be able to sign in once it's approved.</p>
+    </div>
+
+    <p class="small text-center text-muted mt-4 mb-0">
+      Already have an account? <a routerLink="/login" class="fw-semibold">Sign in</a>
+    </p>
+  </form>
+</app-auth-layout>

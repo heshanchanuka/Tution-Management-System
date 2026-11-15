@@ -8,16 +8,23 @@ import { ConfirmService } from '../../../../shared/services/confirm.service';
 
 @Component({
   selector: 'app-class-enrollment',
-  templateUrl: './class-enrollment.component.html',
-  styleUrls: ['./class-enrollment.component.scss']
+  templateUrl: './class-enrollment.component.html'
 })
 export class ClassEnrollmentComponent implements OnInit {
 
   classId!: number;
   schoolClass: ClassResponse | null = null;
   enrolled: StudentResponse[] = [];
-  availableStudents: StudentResponse[] = [];
-  selectedStudentId: number | null = null;
+  allStudents: StudentResponse[] = [];
+  loadingEnrolled = true;
+  loadingStudents = true;
+
+  enrolledFilter = '';
+  availableFilter = '';
+  /** Only show students in the same grade as the class (on by default). */
+  sameGradeOnly = true;
+  /** Ids with an enrol/unenrol request in flight. */
+  busyIds = new Set<number>();
 
   constructor(
     private route: ActivatedRoute,
@@ -32,9 +39,37 @@ export class ClassEnrollmentComponent implements OnInit {
     this.classId = Number(this.route.snapshot.paramMap.get('id'));
     this.loadClass();
     this.loadEnrolled();
-    this.studentService.listAll().subscribe((result) => {
-      this.availableStudents = result.content;
+    this.studentService.listAll().subscribe({
+      next: (result) => {
+        this.allStudents = result.content.sort((a, b) => a.fullName.localeCompare(b.fullName));
+        this.loadingStudents = false;
+      },
+      error: () => (this.loadingStudents = false)
     });
+  }
+
+  get isFull(): boolean {
+    return !!this.schoolClass && this.enrolled.length >= this.schoolClass.capacity;
+  }
+
+  get seatsLeft(): number {
+    return this.schoolClass ? Math.max(0, this.schoolClass.capacity - this.enrolled.length) : 0;
+  }
+
+  get filteredEnrolled(): StudentResponse[] {
+    const term = this.enrolledFilter.trim().toLowerCase();
+    return term ? this.enrolled.filter((s) => s.fullName.toLowerCase().includes(term)) : this.enrolled;
+  }
+
+  get availableStudents(): StudentResponse[] {
+    const enrolledIds = new Set(this.enrolled.map((s) => s.id));
+    const term = this.availableFilter.trim().toLowerCase();
+    const grade = this.schoolClass?.gradeLevel.trim().toLowerCase();
+    return this.allStudents.filter((s) =>
+      !enrolledIds.has(s.id)
+      && (!this.sameGradeOnly || !grade || s.gradeLevel.trim().toLowerCase() === grade)
+      && (!term || s.fullName.toLowerCase().includes(term) || s.parentName?.toLowerCase().includes(term))
+    );
   }
 
   loadClass(): void {
@@ -42,40 +77,56 @@ export class ClassEnrollmentComponent implements OnInit {
   }
 
   loadEnrolled(): void {
-    this.classService.listEnrolled(this.classId).subscribe((students) => (this.enrolled = students));
-  }
-
-  get unenrolledStudents(): StudentResponse[] {
-    const enrolledIds = new Set(this.enrolled.map((s) => s.id));
-    return this.availableStudents.filter((s) => !enrolledIds.has(s.id));
-  }
-
-  enroll(): void {
-    if (!this.selectedStudentId) {
-      return;
-    }
-    this.classService.enroll(this.classId, this.selectedStudentId).subscribe({
-      next: () => {
-        this.toastr.success('Student enrolled');
-        this.selectedStudentId = null;
-        this.loadEnrolled();
-        this.loadClass();
+    this.classService.listEnrolled(this.classId).subscribe({
+      next: (students) => {
+        this.enrolled = students.sort((a, b) => a.fullName.localeCompare(b.fullName));
+        this.loadingEnrolled = false;
       },
-      error: (err) => this.toastr.error(err?.error?.message ?? 'Could not enroll student')
+      error: () => (this.loadingEnrolled = false)
     });
   }
 
-  unenroll(student: StudentResponse): void {
-    if (!this.confirmService.confirm(`Remove "${student.fullName}" from this class?`)) {
+  enroll(student: StudentResponse): void {
+    if (this.isFull) {
+      this.toastr.warning('This class is full. Increase its capacity to enrol more students.');
       return;
     }
+    this.busyIds.add(student.id);
+    this.classService.enroll(this.classId, student.id).subscribe({
+      next: () => {
+        this.busyIds.delete(student.id);
+        // Optimistic local update keeps the lists snappy; the server is the source of truth on reload.
+        this.enrolled = [...this.enrolled, student].sort((a, b) => a.fullName.localeCompare(b.fullName));
+        this.toastr.success(`${student.fullName} enrolled`);
+      },
+      error: (err) => {
+        this.busyIds.delete(student.id);
+        this.toastr.error(err?.error?.message ?? 'Could not enrol student');
+      }
+    });
+  }
+
+  async unenroll(student: StudentResponse): Promise<void> {
+    const ok = await this.confirmService.ask({
+      title: `Remove ${student.fullName} from this class?`,
+      message: 'Their past attendance and results are kept. You can enrol them again later.',
+      confirmText: 'Remove',
+      icon: 'person-dash'
+    });
+    if (!ok) {
+      return;
+    }
+    this.busyIds.add(student.id);
     this.classService.unenroll(this.classId, student.id).subscribe({
       next: () => {
-        this.toastr.success('Student removed from class');
-        this.loadEnrolled();
-        this.loadClass();
+        this.busyIds.delete(student.id);
+        this.enrolled = this.enrolled.filter((s) => s.id !== student.id);
+        this.toastr.success(`${student.fullName} removed from the class`);
       },
-      error: (err) => this.toastr.error(err?.error?.message ?? 'Could not remove student')
+      error: (err) => {
+        this.busyIds.delete(student.id);
+        this.toastr.error(err?.error?.message ?? 'Could not remove student');
+      }
     });
   }
 }
